@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia'
+import { useShare } from '@/hooks/useShare'
 import { LOGIN_PAGE } from '@/router/config'
 import { useUserStore } from '@/store'
 import { useTokenStore } from '@/store/token'
@@ -15,6 +16,8 @@ definePage({
 const userStore = useUserStore()
 const tokenStore = useTokenStore()
 const { userInfo } = storeToRefs(userStore)
+
+useShare({ title: 'my-poly · 我的', path: '/pages/index/index' })
 
 const stats = [
   { label: '我的收藏', value: 0 },

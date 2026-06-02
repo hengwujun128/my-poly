@@ -1,0 +1,19 @@
+---
+description: 项目技术栈锁定与红线规范（uni-app + Vue3 + TS + Vite5 + UnoCSS + wot-ui v2）
+alwaysApply: true
+---
+
+# 技术栈（固定，禁止擅自替换）
+
+uni-app（H5 / 微信小程序 / App）· Vue3 + TypeScript · pnpm · Vite5 · UnoCSS · wot-ui v2（`@wot-ui/ui`）· Pinia（setup store）· 请求走 `src/api` + `src/http`
+
+# 红线（出现即判定为不合格方案，必须改写）
+
+- ❌ `Vue.mixin` / mixin　→　✅ composable（`src/hooks/useXxx.ts`）
+- ❌ Options API（`data()` / `methods`）　→　✅ `<script setup lang="ts">`
+- ❌ 组件内裸用 `uni.request`　→　✅ `src/api` + `src/http` 封装
+- ❌ npm / yarn 装依赖、手写或编造版本号　→　✅ `pnpm add`
+- ❌ 大段重复 scss 写布局/间距　→　✅ UnoCSS 原子类 / shortcut
+- ❌ 随意 `any`　→　✅ 严格 TS 类型
+
+> 详细样式 / 自动导入 / 小程序排坑见 `.vue` 作用域规则；wot-ui 用法与坑位先查 `wot-ui-v2` skill。

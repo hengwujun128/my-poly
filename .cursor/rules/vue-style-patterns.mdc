@@ -1,0 +1,27 @@
+---
+description: Vue 页面/组件编码与样式细则（Composition API、UnoCSS、自动导入、小程序排坑）
+globs: src/**/*.vue
+---
+
+# 组件规范
+
+- 一律 `<script setup lang="ts">` + Composition API。
+- 逻辑复用用 composable（`src/hooks/`）；禁止 `Vue.mixin` / mixin。
+- UI 优先用 wot-ui 现成组件与 `useToast` / `useDialog` / `useMessage` 等 hooks，不要重复造轮子；涉及 wot-ui 用法/坑位先查 `wot-ui-v2` skill。
+
+# 样式（UnoCSS 优先）
+
+- 优先原子类 / shortcut（如 `card`、`bg-hero`）/ rule，避免大段 `<style scoped lang="scss">`。
+- 尺寸换算 `1rem = 32rpx`，标准刻度即 rpx/8（`p-4`=32rpx、`w-13`=104rpx、`rounded-xl`=24rpx）；非整除值用 `[Nrpx]`，如 `text-[30rpx]`。
+- 主色用 `text-primary` / `bg-primary`（紫色 `#7c5cfc`，CSS 变量 `--wot-color-theme`），**不要写死颜色值**。
+
+# 自动导入
+
+- `.vue` 页面：`ref`、`onShareAppMessage` 等无需手写 import。
+- `.ts` / hook 文件：显式 import（与 `useRequest` / `useScroll` 保持一致）。
+
+# 小程序排坑
+
+- 不支持复杂 CSS 选择器；canvas 层级高，注意与 popup / tabbar 冲突。
+- 改了 `uno.config.ts` 不生效：清 `node_modules/.cache`（unconfig 配置缓存）再重启 dev。
+- 多次启动 dev 残留 `uni.js` watcher 并发写 dist 致样式错乱：`pkill -9 -f "vite-plugin-uni/bin/uni.js"` 后只启动一个 `pnpm dev:mp`。

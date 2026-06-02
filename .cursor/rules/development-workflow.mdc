@@ -1,3 +1,7 @@
+---
+description: 开发工作流程和最佳实践指南（启动、构建、调试、性能）。需要时手动引用
+---
+
 # 开发工作流程
 
 ## 项目启动
@@ -11,7 +15,6 @@
 ## 代码规范
 - 使用 ESLint 进行代码检查：`pnpm lint`
 - 自动修复代码格式：`pnpm lint:fix`
-- 使用 eslint 格式化代码
 - 遵循 TypeScript 严格模式
 
 ## 构建和部署
@@ -20,12 +23,6 @@
 - 支付宝小程序构建：`pnpm build:mp-alipay`
 - APP 构建：`pnpm build:app`
 - 类型检查：`pnpm type-check`
-
-## 开发工具
-- 推荐使用 VSCode 编辑器
-- 安装 Vue 和 TypeScript 相关插件
-- 使用 uni-app 开发者工具调试小程序
-- 使用 HBuilderX 调试 APP
 
 ## 调试技巧
 - 使用 console.log 和 uni.showToast 调试
@@ -38,6 +35,3 @@
 - 优化图片和静态资源
 - 减少不必要的重渲染
 - 合理使用缓存策略
----
-description: 开发工作流程和最佳实践指南
----

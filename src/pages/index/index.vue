@@ -2,6 +2,7 @@
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 import { APP_PRIMARY, APP_WX_GREEN } from '@/constants/theme'
+import { useShare } from '@/hooks/useShare'
 import { useUserStore } from '@/store'
 
 definePage({
@@ -15,6 +16,8 @@ definePage({
 
 const userStore = useUserStore()
 const { userInfo } = storeToRefs(userStore)
+
+useShare({ title: '欢迎使用 my-poly', path: '/pages/index/index' })
 
 const greeting = computed(() => {
   const hour = new Date().getHours()
