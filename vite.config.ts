@@ -84,6 +84,7 @@ export default defineConfig(({ command, mode }) => {
         dts: 'src/types/components.d.ts', // 自动生成的组件类型声明文件路径（用于 TypeScript 支持）
         resolvers: [WotResolver()],
       }),
+
       UniPages({
         exclude: ['**/components/**/**.*', '**/sections/**/**.*'],
         // pages 目录为 src/pages，分包目录不能配置在pages目录下！！
@@ -92,11 +93,12 @@ export default defineConfig(({ command, mode }) => {
         subPackages: ['src/pages-demo'],
         dts: 'src/types/uni-pages.d.ts',
       }),
+
       // UniOptimization 插件需要 page.json 文件，故应在 UniPages 插件之后执行
       UniOptimization({
         enable: isMpWeixin
           ? {
-              optimization: true,
+              'optimization': true,
               'async-import': true,
               // 微信小程序「过滤无依赖文件」无法识别 *-vendor.js 的动态引用，关闭组件异步分包
               'async-component': false,
@@ -176,6 +178,14 @@ export default defineConfig(({ command, mode }) => {
       __VITE_APP_PROXY__: JSON.stringify(VITE_APP_PROXY_ENABLE),
     },
     css: {
+      preprocessorOptions: {
+        scss: {
+          silenceDeprecations: ['legacy-js-api'],
+        },
+        sass: {
+          silenceDeprecations: ['legacy-js-api'],
+        },
+      },
       postcss: {
         plugins: [
           // autoprefixer({

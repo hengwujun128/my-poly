@@ -8,7 +8,7 @@ import { ref } from "vue";
 // 小程序中引入 echarts
 // #ifndef APP-PLUS || H5
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const echarts = require("../uni_modules/lime-echart/static/echarts.min");
+const echarts = require("../../uni_modules/lime-echart/static/echarts.min");
 // #endif
 
 // echarts 图表 Hooks

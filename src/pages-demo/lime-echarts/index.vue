@@ -1,7 +1,11 @@
 <template>
-  <view class="chart-page">
-    <view class="chart-box">
-      <l-echart ref="chartRef" @finished="draw" />
+  <view class="min-h-screen bg-[#f2f3f5] p-4">
+    <view class="card p-4">
+      <text class="block text-[32rpx] text-ink font-600">访问来源趋势</text>
+      <text class="mt-1 block text-[24rpx] text-ink-3">最近一周各渠道访问量</text>
+      <view class="mt-3 h-80 w-full">
+        <l-echart ref="chartRef" @finished="draw" />
+      </view>
     </view>
   </view>
 </template>
@@ -12,20 +16,27 @@ import { ref } from 'vue'
 import { useEcharts } from '../hooks/useEcharts'
 
 definePage({
-  style: { navigationBarTitleText: 'lime-echart 图表' },
+  style: {
+    navigationBarTitleText: 'lime-echart 图表',
+    navigationBarBackgroundColor: '#ffffff',
+    navigationBarTextStyle: 'black',
+  },
 })
 
 const options = ref<EChartsOption>({
+  color: ['#7c5cfc', '#07c160', '#36cfc9', '#ff9f43', '#9254de'],
   tooltip: {
     trigger: 'axis',
   },
   legend: {
     data: ['邮件营销', '联盟广告', '视频广告', '直接访问', '搜索引擎'],
+    bottom: 0,
   },
   grid: {
     left: '3%',
     right: '4%',
-    bottom: '3%',
+    top: '8%',
+    bottom: '14%',
     containLabel: true,
   },
   xAxis: {
@@ -72,16 +83,3 @@ const options = ref<EChartsOption>({
 
 const [chartRef, , draw] = useEcharts(options)
 </script>
-
-<style>
-.chart-page {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-}
-
-.chart-box {
-  width: 100%;
-  height: 600rpx;
-}
-</style>

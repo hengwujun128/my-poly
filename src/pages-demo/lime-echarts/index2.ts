@@ -63,10 +63,10 @@ export function useLineEcharts(): any {
       animationDuration: 2800,
       animationEasing: 'cubicInOut',
       symbol: 'circle',
-      color: '#fed42b',
+      color: '#7c5cfc',
       symbolSize: 8,
       lineStyle: {
-        color: '#fed42b', // 改变折线颜色
+        color: '#7c5cfc', // 改变折线颜色
       },
       areaStyle: {
         color: {
@@ -78,11 +78,11 @@ export function useLineEcharts(): any {
           colorStops: [
             {
               offset: 0,
-              color: '#fed42b', // 0% 处的颜色
+              color: '#7c5cfc', // 0% 处的颜色
             },
             {
               offset: 1,
-              color: 'rgba(254, 212, 43, 0.1)', // 100% 处的颜色
+              color: 'rgba(124, 92, 252, 0.1)', // 100% 处的颜色
             },
           ],
           global: false, // 缺省为 false
@@ -149,7 +149,7 @@ export function useBarEcharts(): any {
       data: [120, 200, 150, 80, 70, 110, 130],
       animationDuration: 2800,
       animationEasing: 'cubicInOut',
-      color: '#fed42b',
+      color: '#7c5cfc',
       barWidth: 10,
       itemStyle: {
         barBorderRadius: [3, 3, 0, 0],

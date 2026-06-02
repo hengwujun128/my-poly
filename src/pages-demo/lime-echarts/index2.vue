@@ -1,22 +1,35 @@
 <template>
-  <view>折线图1</view>
-  <view style="width: 100%; height: 200px">
-    <l-echart ref="lineChartRef" />
+  <view class="min-h-screen bg-[#f2f3f5] p-4">
+    <view class="mb-3 card p-4">
+      <text class="block text-[30rpx] text-ink font-600">折线图 1</text>
+      <view class="mt-2.5 h-50 w-full">
+        <l-echart ref="lineChartRef" />
+      </view>
+    </view>
+
+    <view class="mb-3 card p-4">
+      <text class="block text-[30rpx] text-ink font-600">折线图 2</text>
+      <view class="mt-2.5 h-50 w-full">
+        <l-echart ref="lineChartRef2" />
+      </view>
+    </view>
+
+    <view class="mb-3 card p-4">
+      <text class="block text-[30rpx] text-ink font-600">柱状图</text>
+      <view class="mt-2.5 h-50 w-full">
+        <l-echart ref="barChartRef" />
+      </view>
+    </view>
+
+    <view class="mt-1 flex flex-col gap-2.5">
+      <view class="h-11 center rounded-full bg-primary text-[30rpx] text-white font-500" hover-class="opacity-85" @click="changeLineChartData">
+        切换折线图1数据
+      </view>
+      <view class="h-11 center rounded-full bg-[rgba(124,92,252,0.1)] text-[30rpx] text-primary font-500" hover-class="opacity-85" @click="changeBarChartData">
+        改变柱状图样式
+      </view>
+    </view>
   </view>
-  <view>折线图2</view>
-  <view style="width: 100%; height: 200px">
-    <l-echart ref="lineChartRef2" />
-  </view>
-  <view>柱状图</view>
-  <view style="width: 100%; height: 200px">
-    <l-echart ref="barChartRef" />
-  </view>
-  <button @click="changeLineChartData">
-    切换折线图1数据
-  </button>
-  <button @click="changeBarChartData">
-    改变柱状图样式
-  </button>
 </template>
 
 <script setup lang="ts">
@@ -25,14 +38,17 @@ import { onMounted } from 'vue'
 import { useBarEcharts, useLineEcharts } from './index2'
 
 definePage({
-  style: { navigationBarTitleText: 'lime-echart 图表2' },
+  style: {
+    navigationBarTitleText: 'lime-echart 图表2',
+    navigationBarBackgroundColor: '#ffffff',
+    navigationBarTextStyle: 'black',
+  },
 })
 
 const [lineChartRef, lineOption, lineDraw] = useLineEcharts()
 const [lineChartRef2, lineOption2, lineDraw2] = useLineEcharts()
 const [barChartRef, barOption, barDraw] = useBarEcharts()
 
-// 初始化 折线图表1
 function initLineChart() {
   set(
     lineOption.value,
@@ -42,7 +58,6 @@ function initLineChart() {
   lineDraw()
 }
 
-// 初始化 折线图表2
 function initLineChart2() {
   set(
     lineOption2.value,
@@ -52,13 +67,11 @@ function initLineChart2() {
   lineDraw2()
 }
 
-// 初始化 柱状图表
 function initBarChart() {
   set(barOption.value, 'series.data', [120, 200, 150, 80, 70, 110, 130])
   barDraw()
 }
 
-// 切换折线图数据
 function changeLineChartData() {
   set(
     lineOption.value,
@@ -68,9 +81,8 @@ function changeLineChartData() {
   lineDraw()
 }
 
-// 改变柱状图样式
 function changeBarChartData() {
-  set(barOption.value, 'series.color', '#5677fc')
+  set(barOption.value, 'series.color', '#7c5cfc')
   barDraw()
 }
 
@@ -80,12 +92,3 @@ onMounted(() => {
   initBarChart()
 })
 </script>
-
-<style>
-/* 暗黑模式 start */
-.wot-theme-dark {
-  color: #f5f5f5;
-  background: #222;
-  --theme-bg-color: #222;
-}
-</style>

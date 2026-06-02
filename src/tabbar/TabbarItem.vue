@@ -88,7 +88,7 @@ const iconColor = computed(() => {
 
 .tabbar-item__text--active {
   font-weight: 500;
-  color: var(--app-primary, #4d80f0);
+  color: var(--app-primary, #7c5cfc);
 }
 
 .tabbar-item__badge-wrap {

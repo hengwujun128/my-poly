@@ -70,6 +70,8 @@ export default defineConfig({
   shortcuts: [
     {
       center: 'flex justify-center items-center',
+      // 通用白色卡片
+      'card': 'bg-white rounded-[24rpx] shadow-card',
     },
   ],
   // 动态图标需要在这里配置，或者写在vue页面中注释掉
@@ -90,11 +92,24 @@ export default defineConfig({
     ],
     ['pt-safe', { 'padding-top': 'env(safe-area-inset-top)' }],
     ['pb-safe', { 'padding-bottom': 'env(safe-area-inset-bottom)' }],
+    // 顶部品牌渐变（紫色），与导航栏无缝过渡
+    ['bg-hero', { background: 'var(--app-hero-gradient)' }],
+    // 卡片阴影（增强立体感，使白卡片在浅灰背景上层次分明）
+    ['shadow-card', { 'box-shadow': '0 8rpx 24rpx rgba(17, 24, 39, 0.08)' }],
+    // 浮起卡片阴影（带紫色光晕）
+    ['shadow-float', { 'box-shadow': '0 16rpx 40rpx rgba(124, 92, 252, 0.28)' }],
   ],
   theme: {
     colors: {
       /** 主题色，用法如: text-primary */
-      primary: 'var(--wot-color-theme,#0957DE)',
+      primary: 'var(--wot-color-theme,#7c5cfc)',
+      /** 微信绿，用法如: text-wxgreen */
+      wxgreen: '#07c160',
+      /** 文字色阶 */
+      ink: '#1d2129',
+      'ink-2': '#4e5969',
+      'ink-3': '#86909c',
+      'ink-4': '#c9cdd4',
     },
     fontSize: {
       /** 提供更小号的字体，用法如：text-2xs */

@@ -11,13 +11,14 @@
 
 :root,
 page {
-  --app-primary: #4d80f0;
+  --app-primary: #7c5cfc;
   --app-wx-green: #07c160;
-  --app-bg: #f5f6f8;
+  --app-bg: #f2f3f5;
   --app-text: #1d2129;
   --app-text-secondary: #86909c;
-  --wot-color-theme: #4d80f0;
-  --wot-button-primary-bg-color: #4d80f0;
+  --app-hero-gradient: linear-gradient(180deg, #7c5cfc 0%, #a78bfa 100%);
+  --wot-color-theme: #7c5cfc;
+  --wot-button-primary-bg-color: #7c5cfc;
 }
 
 /*

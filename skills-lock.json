@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "wot-ui-v2": {
+      "source": "wot-ui/open-wot",
+      "sourceType": "github",
+      "skillPath": "skills/wot-ui-v2/SKILL.md",
+      "computedHash": "207723b8a0e23cb5657ce9dae012ab92c0d6397212d56b07fafbdbc1ba9c3c2e"
+    }
+  }
+}

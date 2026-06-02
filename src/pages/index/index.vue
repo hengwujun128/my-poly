@@ -8,8 +8,8 @@ definePage({
   type: 'home',
   style: {
     navigationBarTitleText: '首页',
-    navigationBarBackgroundColor: '#f5f6f8',
-    navigationBarTextStyle: 'black',
+    navigationBarBackgroundColor: '#7c5cfc',
+    navigationBarTextStyle: 'white',
   },
 })
 
@@ -40,291 +40,133 @@ const roleText = computed(() => {
   return '普通用户'
 })
 
-const quickMenus = [
-  { title: '工作台', desc: '业务开发中', icon: 'apps', color: APP_PRIMARY },
-  { title: '消息', desc: '暂无新消息', icon: 'message', color: APP_WX_GREEN },
-  { title: '数据', desc: '统计图表', icon: 'list', color: '#36cfc9' },
-  { title: '设置', desc: '账号与安全', icon: 'settings', color: '#86909c' },
+interface EntryItem {
+  title: string
+  desc: string
+  icon: string
+  color: string
+  path?: string
+}
+
+const demoEntries: EntryItem[] = [
+  {
+    title: 'ECharts 图表示例',
+    desc: '折线 / 柱状 / 饼图基础用法',
+    icon: 'mind-mapping',
+    color: APP_PRIMARY,
+    path: '/pages-demo/lime-echarts/index',
+  },
+  {
+    title: 'ECharts 多图表示例',
+    desc: '多实例渲染与动态数据切换',
+    icon: 'apps',
+    color: APP_WX_GREEN,
+    path: '/pages-demo/lime-echarts/index2',
+  },
 ]
+
+const quickMenus: EntryItem[] = [
+  { title: '工作台', desc: '', icon: 'apps', color: APP_PRIMARY },
+  { title: '消息', desc: '', icon: 'message', color: APP_WX_GREEN },
+  { title: '数据图表', desc: '', icon: 'mind-mapping', color: '#36cfc9', path: '/pages-demo/lime-echarts/index' },
+  { title: '设置', desc: '', icon: 'settings', color: '#ff9f43' },
+]
+
+function handleClick(item: EntryItem) {
+  if (item.path) {
+    uni.navigateTo({ url: item.path })
+    return
+  }
+  uni.showToast({ title: '功能开发中', icon: 'none' })
+}
 </script>
 
 <template>
-  <view class="home-page">
-    <view class="home-top">
-      <view class="home-top__glow home-top__glow--green" />
-      <view class="home-top__glow home-top__glow--blue" />
-      <view class="home-top__content">
-        <view class="home-top__brand">
-          <image class="home-top__logo" src="/static/logo.svg" mode="aspectFit" />
-          <text class="home-top__app">my-poly</text>
-        </view>
-        <text class="home-top__greeting">{{ greeting }}，{{ displayName }}</text>
-        <text class="home-top__sub">欢迎回来</text>
-      </view>
-    </view>
+  <view class="min-h-screen bg-[#f2f3f5]">
+    <!-- 顶部渐变区 -->
+    <view class="relative px-4 pt-3">
+      <view class="bg-hero absolute left-0 right-0 top-0 h-40 rounded-b-[40rpx]" />
 
-    <view class="home-body">
-      <view class="user-card">
+      <view class="relative flex items-center justify-between px-1 pb-4.5 pt-1.5">
+        <view class="flex flex-col">
+          <text class="text-[28rpx] text-white/80">{{ greeting }}</text>
+          <text class="mt-1 text-[44rpx] text-white font-semibold">{{ displayName }}</text>
+        </view>
         <image
-          class="user-avatar"
+          class="h-12 w-12 border-[4rpx] border-white/40 rounded-full bg-white/20"
           :src="userInfo.avatar || '/static/images/default-avatar.png'"
           mode="aspectFill"
         />
-        <view class="user-info">
-          <text class="user-name">{{ displayName }}</text>
-          <text class="user-account">{{ userInfo.username || '-' }}</text>
-          <view class="user-tags">
-            <text class="tag tag--primary">{{ roleText }}</text>
-            <text class="tag tag--green">已登录</text>
+      </view>
+
+      <!-- 信息浮起卡片 -->
+      <view class="shadow-float relative flex items-center rounded-xl bg-white px-1 py-4">
+        <view class="flex flex-1 flex-col items-center gap-[10rpx]">
+          <text class="text-ink-3 text-[24rpx]">账号</text>
+          <text class="text-ink max-w-[200rpx] truncate text-[28rpx] font-semibold">{{ userInfo.username || '-' }}</text>
+        </view>
+        <view class="h-[48rpx] w-[1rpx] bg-[#ebedf0]" />
+        <view class="flex flex-1 flex-col items-center gap-[10rpx]">
+          <text class="text-ink-3 text-[24rpx]">角色</text>
+          <text class="text-ink max-w-[200rpx] truncate text-[28rpx] font-semibold">{{ roleText }}</text>
+        </view>
+        <view class="h-[48rpx] w-[1rpx] bg-[#ebedf0]" />
+        <view class="flex flex-1 flex-col items-center gap-[10rpx]">
+          <text class="text-ink-3 text-[24rpx]">状态</text>
+          <text class="text-wxgreen text-[28rpx] font-semibold">已登录</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="p-4">
+      <!-- 快捷功能 -->
+      <view class="card grid grid-cols-4 px-1.5 py-4">
+        <view
+          v-for="item in quickMenus"
+          :key="item.title"
+          class="flex flex-col items-center gap-[14rpx]"
+          hover-class="opacity-60"
+          @click="handleClick(item)"
+        >
+          <view class="h-11 w-11 center rounded-xl" :style="{ background: `${item.color}14` }">
+            <wd-icon :name="item.icon" :color="item.color" size="44rpx" />
+          </view>
+          <text class="text-ink-2 text-[24rpx]">{{ item.title }}</text>
+        </view>
+      </view>
+
+      <!-- Demo 示例 -->
+      <view class="mt-4.5">
+        <view class="mb-2.5 flex items-baseline justify-between">
+          <text class="text-ink text-[32rpx] font-semibold">Demo 示例</text>
+          <text class="text-ink-4 text-[24rpx]">pages-demo 分包</text>
+        </view>
+        <view class="card overflow-hidden">
+          <view
+            v-for="(item, index) in demoEntries"
+            :key="item.path"
+            class="flex items-center gap-3 p-3.5"
+            :class="{ 'border-b border-b-[#f2f3f5]': index < demoEntries.length - 1 }"
+            hover-class="bg-[#f7f8fa]"
+            @click="handleClick(item)"
+          >
+            <view class="h-10 w-10 center shrink-0 rounded-[20rpx]" :style="{ background: `${item.color}14` }">
+              <wd-icon :name="item.icon" :color="item.color" size="40rpx" />
+            </view>
+            <view class="min-w-0 flex-1">
+              <text class="text-ink text-[30rpx] font-medium">{{ item.title }}</text>
+              <text class="text-ink-3 mt-1 block text-[24rpx]">{{ item.desc }}</text>
+            </view>
+            <wd-icon name="arrow-right" color="#c9cdd4" size="32rpx" />
           </view>
         </view>
       </view>
 
-      <view class="section-head">
-        <text class="section-title">快捷入口</text>
-      </view>
-      <view class="menu-grid">
-        <view v-for="item in quickMenus" :key="item.title" class="menu-item">
-          <view class="menu-icon" :style="{ background: `${item.color}12` }">
-            <wd-icon :name="item.icon" :color="item.color" size="40rpx" />
-          </view>
-          <text class="menu-title">{{ item.title }}</text>
-          <text class="menu-desc">{{ item.desc }}</text>
-        </view>
-      </view>
-
-      <view class="tips-card">
-        <view class="tips-card__bar" />
-        <view class="tips-card__body">
-          <text class="tips-title">一切就绪</text>
-          <text class="tips-desc">您已成功登录，业务模块将陆续在此展示。</text>
-        </view>
+      <!-- 提示条 -->
+      <view class="mt-4 flex items-center gap-2 rounded-[20rpx] bg-[rgba(124,92,252,0.08)] p-3.5">
+        <wd-icon name="info-circle-fill" :color="APP_PRIMARY" size="36rpx" />
+        <text class="text-ink-2 text-[26rpx]">一切就绪，业务模块将陆续在此展示</text>
       </view>
     </view>
   </view>
 </template>
-
-<style lang="scss" scoped>
-.home-page {
-  min-height: 100vh;
-  background: #f5f6f8;
-}
-
-.home-top {
-  position: relative;
-  overflow: hidden;
-  padding: 24rpx 32rpx 40rpx;
-  background: linear-gradient(180deg, #ecfbf3 0%, #eef4ff 55%, #f5f6f8 100%);
-}
-
-.home-top__glow {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(40rpx);
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-.home-top__glow--green {
-  top: -40rpx;
-  left: -20rpx;
-  width: 220rpx;
-  height: 220rpx;
-  background: #07c160;
-}
-
-.home-top__glow--blue {
-  top: -20rpx;
-  right: -30rpx;
-  width: 260rpx;
-  height: 260rpx;
-  background: #4d80f0;
-}
-
-.home-top__content {
-  position: relative;
-  z-index: 1;
-}
-
-.home-top__brand {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  margin-bottom: 28rpx;
-}
-
-.home-top__logo {
-  width: 64rpx;
-  height: 64rpx;
-}
-
-.home-top__app {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #1d2129;
-}
-
-.home-top__greeting {
-  display: block;
-  font-size: 40rpx;
-  font-weight: 600;
-  line-height: 1.35;
-  color: #1d2129;
-}
-
-.home-top__sub {
-  display: block;
-  margin-top: 8rpx;
-  font-size: 26rpx;
-  color: #86909c;
-}
-
-.home-body {
-  padding: 0 32rpx 32rpx;
-  margin-top: -8rpx;
-}
-
-.user-card {
-  display: flex;
-  align-items: center;
-  padding: 28rpx;
-  background: #fff;
-  border-radius: 24rpx;
-  box-shadow: 0 8rpx 32rpx rgb(29 33 41 / 5%);
-  gap: 24rpx;
-}
-
-.user-avatar {
-  flex-shrink: 0;
-  width: 104rpx;
-  height: 104rpx;
-  border: 4rpx solid #fff;
-  border-radius: 50%;
-  background: #f2f3f5;
-  box-shadow: 0 4rpx 16rpx rgb(77 128 240 / 12%);
-}
-
-.user-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.user-name {
-  display: block;
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #1d2129;
-}
-
-.user-account {
-  display: block;
-  margin-top: 6rpx;
-  font-size: 24rpx;
-  color: #86909c;
-}
-
-.user-tags {
-  display: flex;
-  flex-wrap: wrap;
-  margin-top: 14rpx;
-  gap: 12rpx;
-}
-
-.tag {
-  padding: 4rpx 14rpx;
-  border-radius: 8rpx;
-  font-size: 22rpx;
-}
-
-.tag--primary {
-  color: #4d80f0;
-  background: rgb(77 128 240 / 10%);
-}
-
-.tag--green {
-  color: #07c160;
-  background: rgb(7 193 96 / 10%);
-}
-
-.section-head {
-  margin: 36rpx 0 20rpx;
-}
-
-.section-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #1d2129;
-}
-
-.menu-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20rpx;
-}
-
-.menu-item {
-  padding: 28rpx 24rpx;
-  background: #fff;
-  border-radius: 20rpx;
-  box-shadow: 0 4rpx 20rpx rgb(0 0 0 / 3%);
-}
-
-.menu-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 72rpx;
-  height: 72rpx;
-  margin-bottom: 16rpx;
-  border-radius: 18rpx;
-}
-
-.menu-title {
-  display: block;
-  font-size: 28rpx;
-  font-weight: 500;
-  color: #1d2129;
-}
-
-.menu-desc {
-  display: block;
-  margin-top: 6rpx;
-  font-size: 22rpx;
-  color: #c9cdd4;
-}
-
-.tips-card {
-  display: flex;
-  margin-top: 28rpx;
-  overflow: hidden;
-  background: #fff;
-  border-radius: 20rpx;
-  box-shadow: 0 4rpx 20rpx rgb(0 0 0 / 3%);
-}
-
-.tips-card__bar {
-  flex-shrink: 0;
-  width: 8rpx;
-  background: linear-gradient(180deg, #07c160 0%, #4d80f0 100%);
-}
-
-.tips-card__body {
-  flex: 1;
-  padding: 28rpx 28rpx 28rpx 24rpx;
-}
-
-.tips-title {
-  display: block;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #1d2129;
-}
-
-.tips-desc {
-  display: block;
-  margin-top: 10rpx;
-  font-size: 24rpx;
-  line-height: 1.6;
-  color: #86909c;
-}
-</style>

@@ -10,7 +10,7 @@ defineOptions({
 // #endif
 
 function getTabIconColor(active: boolean) {
-  return active ? 'var(--app-primary, #4d80f0)' : 'var(--app-text-secondary, #86909c)'
+  return active ? 'var(--app-primary, #7c5cfc)' : 'var(--app-text-secondary, #86909c)'
 }
 
 function getImageByIndex(index: number, item: CustomTabBarItem) {
@@ -209,7 +209,7 @@ onMounted(() => {
 
 .tabbar-item__text--active {
   font-weight: 500;
-  color: var(--app-primary, #4d80f0);
+  color: var(--app-primary, #7c5cfc);
 }
 
 .tabbar-item__badge-wrap {
