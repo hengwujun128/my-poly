@@ -1,3 +1,11 @@
+<!--
+ * @Author: 张泽全 hengwujun128@gmail.com
+ * @Date: 2026-06-01 18:09:09
+ * @LastEditors: 张泽全 hengwujun128@gmail.com
+ * @LastEditTime: 2026-06-02 08:36:32
+ * @Description: 
+ * @FilePath: /my-poly/README.md
+-->
 <p align="center">
   <a href="https://github.com/unibest-tech/unibest">
     <img width="160" src="./src/static/logo.svg">
@@ -29,7 +37,7 @@
 
 </div>
 
-`unibest` —— 最好的 `uniapp` 开发模板，由 `uniapp` + `Vue3` + `Ts` + `Vite5` + `UnoCss` + `wot-ui` + `z-paging` 构成，使用了最新的前端技术栈，无需依靠 `HBuilderX`，通过命令行方式运行 `web`、`小程序` 和 `App`（编辑器推荐 `VSCode`，可选 `webstorm`）。
+`my-poly` —— 使用unibest这款最好的 `uniapp` 开发模板，由 `uniapp` + `Vue3` + `Ts` + `Vite5` + `UnoCss` + `wot-ui` + `z-paging` 构成，使用了最新的前端技术栈，无需依靠 `HBuilderX`，通过命令行方式运行 `web`、`小程序` 和 `App`（编辑器推荐 `VSCode`，可选 `webstorm`）。
 
 `unibest` 内置了 `约定式路由`、`layout布局`、`请求封装`、`请求拦截`、`登录拦截`、`UnoCSS`、`i18n多语言` 等基础功能，提供了 `代码提示`、`自动格式化`、`统一配置`、`代码片段` 等辅助功能，让你编写 `uniapp` 拥有 `best` 体验 （ `unibest 的由来`）。
 
@@ -60,7 +68,8 @@
 - Vue Official>=2.1.10
 - TypeScript>=5.0
 
-## 新版分支 
+## 新版分支
+
 - main == base
 - base --> base-i18n
 - base-login --> base-login-i18n
@@ -87,12 +96,3 @@
 ## 📄 License
 
 [MIT](https://opensource.org/license/mit/)
-
-Copyright (c) 2025 菲鸽
-
-## 捐赠
-
-<p align='center'>
-<img alt="special sponsor appwrite" src="https://oss.laf.run/ukw0y1-site/pay/wepay.png" height="330" style="display:inline-block; height:330px;">
-<img alt="special sponsor appwrite" src="https://oss.laf.run/ukw0y1-site/pay/alipay.jpg" height="330" style="display:inline-block; height:330px; margin-left:10px;">
-</p>
