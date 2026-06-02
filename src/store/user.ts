@@ -5,6 +5,7 @@ import {
   getUserInfo,
   mapUserInfo,
 } from '@/api/login'
+import { resolveAvatarSrc } from '@/utils/avatar'
 
 // 初始化状态
 const userInfoState: IUserInfoRes = {
@@ -22,10 +23,7 @@ export const useUserStore = defineStore(
     // 设置用户信息
     const setUserInfo = (val: IUserInfoRes) => {
       console.log('设置用户信息', val)
-      // 若头像为空 则使用默认头像
-      if (!val.avatar) {
-        val.avatar = userInfoState.avatar
-      }
+      val.avatar = resolveAvatarSrc(val.avatar)
       userInfo.value = val
     }
     const setUserAvatar = (avatar: string) => {

@@ -2,8 +2,9 @@
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { getCode } from '@/api/login'
-import { WX_NEED_BIND_CODE } from '@/constants/wx'
+import { PHONE_NEED_BIND_CODE, WX_NEED_BIND_CODE } from '@/constants/wx'
 import { useTokenStore } from '@/store/token'
+import { resolveAvatarSrc } from '@/utils/avatar'
 import { normalizeCaptchaSrc, persistCaptchaSvg } from '@/utils/captcha'
 import { navigateAfterLogin } from '@/utils/navigateAfterLogin'
 
@@ -26,7 +27,28 @@ const captchaError = ref('')
 const loading = ref(false)
 const wxLoading = ref(false)
 const needBindHint = ref(false)
+const phoneNeedBindHint = ref(false)
+const phoneLoading = ref(false)
+const pendingPhoneCode = ref('')
 const redirect = ref('')
+// 用户选择的真实微信头像（临时文件路径）与昵称
+const chosenAvatar = ref('')
+const chosenNickname = ref('')
+
+/** 微信头像选择回调（open-type="chooseAvatar"） */
+function onChooseAvatar(e: any) {
+  const url = e?.detail?.avatarUrl
+  if (url) {
+    chosenAvatar.value = url
+  }
+}
+
+/** 登录成功后，若用户选择了头像则上传保存 */
+async function applyChosenAvatar() {
+  if (chosenAvatar.value) {
+    await tokenStore.uploadAvatar(chosenAvatar.value)
+  }
+}
 
 async function refreshCaptcha() {
   captchaLoading.value = true
@@ -78,7 +100,7 @@ async function doLogin() {
   loading.value = true
   try {
     let wxCode: string | undefined
-    // 仅在微信一键登录提示「需绑定」后，账号密码登录才附带 wxCode
+    let phoneCode: string | undefined
     // #ifdef MP-WEIXIN
     if (needBindHint.value) {
       try {
@@ -91,6 +113,9 @@ async function doLogin() {
         // 绑定失败不影响纯账号登录
       }
     }
+    if (phoneNeedBindHint.value && pendingPhoneCode.value) {
+      phoneCode = pendingPhoneCode.value
+    }
     // #endif
     await tokenStore.login({
       username: username.value,
@@ -98,8 +123,12 @@ async function doLogin() {
       uuid: captchaUuid.value,
       code: captchaCode.value,
       wxCode,
+      phoneCode,
     })
     needBindHint.value = false
+    phoneNeedBindHint.value = false
+    pendingPhoneCode.value = ''
+    await applyChosenAvatar()
     await afterLoginSuccess()
   }
   catch {
@@ -124,8 +153,12 @@ function doWxLogin() {
         if (!loginRes.code) {
           throw new Error('未获取到微信 code')
         }
-        await tokenStore.wxLogin({ code: loginRes.code })
+        await tokenStore.wxLogin({
+          code: loginRes.code,
+          nickName: chosenNickname.value || undefined,
+        })
         needBindHint.value = false
+        await applyChosenAvatar()
         await afterLoginSuccess()
       }
       catch (error: any) {
@@ -150,6 +183,44 @@ function doWxLogin() {
   // #endif
 }
 
+async function onGetPhoneNumber(e: any) {
+  if (tokenStore.hasLogin) {
+    await afterLoginSuccess()
+    return
+  }
+  // #ifdef MP-WEIXIN
+  if (e?.detail?.errMsg !== 'getPhoneNumber:ok' || !e?.detail?.code) {
+    uni.showToast({ title: '需要授权手机号才能登录', icon: 'none' })
+    return
+  }
+  phoneLoading.value = true
+  try {
+    await tokenStore.phoneLogin({
+      phoneCode: e.detail.code,
+      nickName: chosenNickname.value || undefined,
+    })
+    phoneNeedBindHint.value = false
+    pendingPhoneCode.value = ''
+    await applyChosenAvatar()
+    await afterLoginSuccess()
+  }
+  catch (error: any) {
+    if (error?.code === PHONE_NEED_BIND_CODE) {
+      phoneNeedBindHint.value = true
+      pendingPhoneCode.value = e.detail.code
+      uni.showToast({
+        title: '请用账号密码登录完成绑定',
+        icon: 'none',
+        duration: 2500,
+      })
+    }
+  }
+  finally {
+    phoneLoading.value = false
+  }
+  // #endif
+}
+
 onLoad((query) => {
   redirect.value = query?.redirect ? decodeURIComponent(String(query.redirect)) : ''
   refreshCaptcha()
@@ -170,8 +241,31 @@ onShow(() => {
 
     <view class="login-card">
       <!-- #ifdef MP-WEIXIN -->
+      <view class="profile-pick">
+        <button class="avatar-btn" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
+          <image class="avatar-img" :src="resolveAvatarSrc(chosenAvatar)" mode="aspectFill" />
+          <text class="avatar-tip">{{ chosenAvatar ? '点击更换头像' : '选择微信头像' }}</text>
+        </button>
+        <input
+          v-model="chosenNickname"
+          class="nickname-input"
+          type="nickname"
+          placeholder="点击填写昵称（可选）"
+          placeholder-class="nickname-ph"
+        >
+      </view>
+
       <button class="btn-wx" :loading="wxLoading" :disabled="wxLoading" @tap="doWxLogin">
         微信一键登录
+      </button>
+      <button
+        class="btn-phone"
+        open-type="getPhoneNumber"
+        :loading="phoneLoading"
+        :disabled="phoneLoading"
+        @getphonenumber="onGetPhoneNumber"
+      >
+        本机号码一键登录
       </button>
       <view class="split-line">
         <view class="split-line__bar" />
@@ -182,6 +276,9 @@ onShow(() => {
 
       <view v-if="needBindHint" class="bind-hint">
         微信尚未绑定系统账号。您也可直接使用账号密码登录；若需绑定微信，请继续填写下方信息登录。
+      </view>
+      <view v-if="phoneNeedBindHint" class="bind-hint bind-hint--phone">
+        手机号尚未绑定系统账号。请填写账号密码登录，系统将自动绑定刚才授权的手机号。
       </view>
 
       <wd-cell-group border custom-class="field-group">
@@ -275,6 +372,57 @@ onShow(() => {
   box-shadow: 0 4rpx 24rpx rgb(0 0 0 / 4%);
 }
 
+.profile-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 32rpx;
+}
+
+.avatar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  background: transparent;
+  line-height: normal;
+}
+
+.avatar-btn::after {
+  border: none;
+}
+
+.avatar-img {
+  width: 128rpx;
+  height: 128rpx;
+  border: 2rpx solid #ecedf0;
+  border-radius: 50%;
+  background: #f2f3f5;
+}
+
+.avatar-tip {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #86909c;
+}
+
+.nickname-input {
+  width: 360rpx;
+  height: 72rpx;
+  margin-top: 20rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  text-align: center;
+  color: #1d2129;
+  background: #f7f8fa;
+  border-radius: 16rpx;
+  box-sizing: border-box;
+}
+
+.nickname-ph {
+  color: #c9cdd4;
+}
+
 .btn-wx {
   width: 100%;
   height: 96rpx;
@@ -289,6 +437,28 @@ onShow(() => {
 
 .btn-wx::after {
   border: none;
+}
+
+.btn-phone {
+  width: 100%;
+  height: 96rpx;
+  margin-top: 20rpx;
+  border: none;
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  line-height: 96rpx;
+  color: #fff;
+  background: #4d80f0;
+}
+
+.btn-phone::after {
+  border: none;
+}
+
+.bind-hint--phone {
+  color: #4d80f0;
+  background: #eef4ff;
 }
 
 .bind-hint {

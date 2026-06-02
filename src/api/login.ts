@@ -1,5 +1,7 @@
 import type { IAuthLoginRes, ICaptcha, IDoubleTokenRes, IUpdateInfo, IUpdatePassword, IUserInfoRes } from './types/login'
 import { http } from '@/http/http'
+import { getEnvBaseUrl } from '@/utils'
+import { resolveAvatarSrc } from '@/utils/avatar'
 
 /** nest-prisma-api 登录表单（含图形验证码） */
 export interface ILoginForm {
@@ -9,6 +11,8 @@ export interface ILoginForm {
   code: string
   /** 小程序账号密码登录时附带，用于绑定微信 */
   wxCode?: string
+  /** 小程序账号密码登录时附带，用于绑定手机号 */
+  phoneCode?: string
 }
 
 /** nest-prisma-api getInfo 响应 */
@@ -26,6 +30,13 @@ export interface IGetInfoRes {
 
 export interface IWxLoginParams {
   code: string
+  nickName?: string
+  avatarUrl?: string
+}
+
+export interface IPhoneLoginParams {
+  phoneCode: string
+  wxCode?: string
   nickName?: string
   avatarUrl?: string
 }
@@ -113,11 +124,52 @@ export function wxLogin(data: IWxLoginParams) {
 }
 
 /**
+ * 本机号码一键登录
+ * POST /v1/phoneLogin
+ */
+export function phoneLogin(data: IPhoneLoginParams) {
+  return http.post<{ token: string }>('/phoneLogin', data, undefined, undefined, { hideErrorToast: true }).then(normalizeTokenRes)
+}
+
+/**
  * 已登录用户绑定微信
  * POST /v1/wxBind
  */
 export function wxBind(code: string) {
   return http.post<{ bound: boolean }>('/wxBind', { code })
+}
+
+/**
+ * 上传并保存当前用户头像（需已登录）
+ * POST /v1/system/user/profile/avatar
+ * @param filePath 本地/临时文件路径（如 wx.chooseAvatar 返回的 avatarUrl）
+ * @param token 登录态 token
+ * @returns 后端保存的头像相对路径（如 /upload/2026-06-02/xxx.png）
+ */
+export function uploadUserAvatar(filePath: string, token: string) {
+  return new Promise<string>((resolve, reject) => {
+    uni.uploadFile({
+      url: `${getEnvBaseUrl()}/system/user/profile/avatar`,
+      filePath,
+      name: 'avatarfile',
+      header: token ? { Authorization: `Bearer ${token}` } : {},
+      success: (res) => {
+        try {
+          const parsed = JSON.parse(res.data)
+          const imgUrl = parsed?.data?.imgUrl || parsed?.imgUrl
+          if (!imgUrl) {
+            reject(new Error('上传头像失败'))
+            return
+          }
+          resolve(imgUrl)
+        }
+        catch {
+          reject(new Error('头像响应解析失败'))
+        }
+      },
+      fail: err => reject(err),
+    })
+  })
 }
 
 /** 将 getInfo 响应映射为前端用户信息结构 */
@@ -126,7 +178,7 @@ export function mapUserInfo(res: IGetInfoRes): IUserInfoRes {
     userId: res.user.userId,
     username: res.user.userName,
     nickname: res.user.nickName,
-    avatar: res.user.avatar,
+    avatar: resolveAvatarSrc(res.user.avatar),
     roles: res.roles,
   }
 }

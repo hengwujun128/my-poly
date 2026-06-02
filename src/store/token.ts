@@ -7,11 +7,13 @@ import { computed, ref } from 'vue' // 修复：导入 computed
 import {
   login as _login,
   logout as _logout,
+  phoneLogin as _phoneLogin,
   refreshToken as _refreshToken,
+  uploadUserAvatar,
   wxLogin as _wxLogin,
   getWxCode,
 } from '@/api/login'
-import { WX_NEED_BIND_CODE } from '@/constants/wx'
+import { PHONE_NEED_BIND_CODE, WX_NEED_BIND_CODE } from '@/constants/wx'
 import { getApiErrorMessage } from '@/utils/apiError'
 import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login'
 import { isDoubleTokenMode } from '@/utils'
@@ -189,6 +191,67 @@ export const useTokenStore = defineStore(
     }
 
     /**
+     * 本机号码一键登录
+     */
+    const phoneLogin = async (params: {
+      phoneCode: string
+      wxCode?: string
+      nickName?: string
+      avatarUrl?: string
+    }) => {
+      try {
+        const res = await _phoneLogin({
+          phoneCode: params.phoneCode,
+          wxCode: params.wxCode,
+          nickName: params.nickName,
+          avatarUrl: params.avatarUrl,
+        })
+        await _postLogin(res)
+        uni.showToast({
+          title: '登录成功',
+          icon: 'success',
+        })
+        return res
+      }
+      catch (error: any) {
+        console.error('手机号登录失败:', error)
+        if (error?.code !== PHONE_NEED_BIND_CODE) {
+          uni.showToast({
+            title: getApiErrorMessage(error, '手机号登录失败，请重试'),
+            icon: 'none',
+          })
+        }
+        throw error
+      }
+      finally {
+        updateNowTime()
+      }
+    }
+
+    /**
+     * 上传并保存头像（登录后调用），成功后刷新用户信息
+     */
+    const uploadAvatar = async (filePath: string) => {
+      if (!filePath) {
+        return
+      }
+      const token = await tryGetValidToken()
+      if (!token) {
+        return
+      }
+      try {
+        await uploadUserAvatar(filePath, token)
+        const userStore = useUserStore()
+        await userStore.fetchUserInfo()
+        // 本会话直接用本地临时图显示，避免本地 http 头像在渲染层加载失败
+        userStore.setUserAvatar(filePath)
+      }
+      catch (error) {
+        console.error('上传头像失败:', error)
+      }
+    }
+
+    /**
      * 退出登录 并 删除用户信息
      */
     const logout = async () => {
@@ -312,6 +375,8 @@ export const useTokenStore = defineStore(
       // 核心API方法
       login,
       wxLogin,
+      phoneLogin,
+      uploadAvatar,
       logout,
 
       // 认证状态判断（最常用的）

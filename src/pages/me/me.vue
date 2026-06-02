@@ -4,6 +4,7 @@ import { useShare } from '@/hooks/useShare'
 import { LOGIN_PAGE } from '@/router/config'
 import { useUserStore } from '@/store'
 import { useTokenStore } from '@/store/token'
+import { resolveAvatarSrc } from '@/utils/avatar'
 
 definePage({
   style: {
@@ -56,6 +57,31 @@ async function handleLogin() {
   uni.navigateTo({ url: LOGIN_PAGE })
 }
 
+function onAvatarError() {
+  if (userInfo.value.avatar !== '/static/images/default-avatar.png') {
+    userStore.setUserAvatar('/static/images/default-avatar.png')
+  }
+}
+
+/** 点击头像选择微信头像并上传 */
+async function onChooseAvatar(e: any) {
+  const url = e?.detail?.avatarUrl
+  if (!url) {
+    return
+  }
+  uni.showLoading({ title: '上传中...' })
+  try {
+    await tokenStore.uploadAvatar(url)
+    uni.showToast({ title: '头像已更新', icon: 'success' })
+  }
+  catch {
+    uni.showToast({ title: '头像更新失败', icon: 'none' })
+  }
+  finally {
+    uni.hideLoading()
+  }
+}
+
 function handleLogout() {
   uni.showModal({
     title: '提示',
@@ -80,11 +106,14 @@ function handleLogout() {
       <view class="absolute left-0 right-0 top-0 h-45 rounded-b-[40rpx] bg-hero" />
 
       <view v-if="tokenStore.hasLogin" class="relative flex items-center gap-3 px-1 pb-5">
-        <image
-          class="h-15 w-15 shrink-0 border-[4rpx] border-white/32 rounded-full bg-white/18"
-          :src="userInfo.avatar || '/static/images/default-avatar.png'"
-          mode="aspectFill"
-        />
+        <button class="avatar-pick" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
+          <image
+            class="h-15 w-15 shrink-0 border-[4rpx] border-white/32 rounded-full bg-white/18"
+            :src="resolveAvatarSrc(userInfo.avatar)"
+            mode="aspectFill"
+            @error="onAvatarError"
+          />
+        </button>
         <view class="min-w-0 flex-1">
           <text class="text-[38rpx] text-white font-600">{{ userInfo.nickname || userInfo.username }}</text>
           <text class="mt-1.5 block text-[24rpx] text-white/78">账号：{{ userInfo.username }}</text>
@@ -160,3 +189,16 @@ function handleLogout() {
     </view>
   </view>
 </template>
+
+<style lang="scss" scoped>
+.avatar-pick {
+  padding: 0;
+  margin: 0;
+  line-height: normal;
+  background: transparent;
+}
+
+.avatar-pick::after {
+  border: none;
+}
+</style>

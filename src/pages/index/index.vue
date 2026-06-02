@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import { APP_PRIMARY, APP_WX_GREEN } from '@/constants/theme'
 import { useShare } from '@/hooks/useShare'
 import { useUserStore } from '@/store'
+import { resolveAvatarSrc } from '@/utils/avatar'
 
 definePage({
   type: 'home',
@@ -16,6 +17,12 @@ definePage({
 
 const userStore = useUserStore()
 const { userInfo } = storeToRefs(userStore)
+
+function onAvatarError() {
+  if (userInfo.value.avatar !== '/static/images/default-avatar.png') {
+    userStore.setUserAvatar('/static/images/default-avatar.png')
+  }
+}
 
 useShare({ title: '欢迎使用 my-poly', path: '/pages/index/index' })
 
@@ -97,8 +104,9 @@ function handleClick(item: EntryItem) {
         </view>
         <image
           class="h-12 w-12 border-[4rpx] border-white/40 rounded-full bg-white/20"
-          :src="userInfo.avatar || '/static/images/default-avatar.png'"
+          :src="resolveAvatarSrc(userInfo.avatar)"
           mode="aspectFill"
+          @error="onAvatarError"
         />
       </view>
 
