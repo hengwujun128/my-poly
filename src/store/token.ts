@@ -15,7 +15,7 @@ import {
   wxLogin as _wxLogin,
   getWxCode,
 } from '@/api/login'
-import { PHONE_NEED_BIND_CODE, WX_NEED_BIND_CODE } from '@/constants/wx'
+import { WX_NEED_BIND_CODE } from '@/constants/wx'
 import { getApiErrorMessage } from '@/utils/apiError'
 import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login'
 import { isDoubleTokenMode } from '@/utils'
@@ -217,12 +217,11 @@ export const useTokenStore = defineStore(
       }
       catch (error: any) {
         console.error('手机号登录失败:', error)
-        if (error?.code !== PHONE_NEED_BIND_CODE) {
-          uni.showToast({
-            title: getApiErrorMessage(error, '手机号登录失败，请重试'),
-            icon: 'none',
-          })
-        }
+        uni.showToast({
+          title: getApiErrorMessage(error, '手机号登录失败，请重试'),
+          icon: 'none',
+          duration: 2500,
+        })
         throw error
       }
       finally {
