@@ -9,6 +9,7 @@ import {
   logout as _logout,
   phoneLogin as _phoneLogin,
   refreshToken as _refreshToken,
+  updateMyProfile,
   uploadUserAvatar,
   wxLogin as _wxLogin,
   getWxCode,
@@ -252,6 +253,19 @@ export const useTokenStore = defineStore(
     }
 
     /**
+     * 更新昵称（登录后调用），成功后刷新用户信息
+     */
+    const updateNickname = async (nickName: string) => {
+      const name = nickName?.trim()
+      if (!name) {
+        return
+      }
+      await updateMyProfile({ nickName: name })
+      const userStore = useUserStore()
+      await userStore.fetchUserInfo()
+    }
+
+    /**
      * 退出登录 并 删除用户信息
      */
     const logout = async () => {
@@ -377,6 +391,7 @@ export const useTokenStore = defineStore(
       wxLogin,
       phoneLogin,
       uploadAvatar,
+      updateNickname,
       logout,
 
       // 认证状态判断（最常用的）

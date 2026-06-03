@@ -1,10 +1,13 @@
 <script lang="ts" setup>
 import { storeToRefs } from 'pinia'
+import { computed, ref, watch } from 'vue'
 import { useShare } from '@/hooks/useShare'
 import { LOGIN_PAGE } from '@/router/config'
 import { useUserStore } from '@/store'
 import { useTokenStore } from '@/store/token'
 import { resolveAvatarSrc } from '@/utils/avatar'
+
+const DEFAULT_AVATAR = '/static/images/default-avatar.png'
 
 definePage({
   style: {
@@ -57,9 +60,20 @@ async function handleLogin() {
   uni.navigateTo({ url: LOGIN_PAGE })
 }
 
+// 昵称编辑（与登录态用户信息保持同步）
+const nickname = ref(userInfo.value.nickname || '')
+watch(() => userInfo.value.nickname, (val) => {
+  nickname.value = val || ''
+})
+
+const hasAvatar = computed(() => {
+  const src = userInfo.value.avatar
+  return !!src && src !== DEFAULT_AVATAR
+})
+
 function onAvatarError() {
-  if (userInfo.value.avatar !== '/static/images/default-avatar.png') {
-    userStore.setUserAvatar('/static/images/default-avatar.png')
+  if (userInfo.value.avatar !== DEFAULT_AVATAR) {
+    userStore.setUserAvatar(DEFAULT_AVATAR)
   }
 }
 
@@ -76,6 +90,25 @@ async function onChooseAvatar(e: any) {
   }
   catch {
     uni.showToast({ title: '头像更新失败', icon: 'none' })
+  }
+  finally {
+    uni.hideLoading()
+  }
+}
+
+/** 保存昵称 */
+async function saveNickname() {
+  const name = nickname.value.trim()
+  if (!name || name === (userInfo.value.nickname || '')) {
+    return
+  }
+  uni.showLoading({ title: '保存中...' })
+  try {
+    await tokenStore.updateNickname(name)
+    uni.showToast({ title: '昵称已更新', icon: 'success' })
+  }
+  catch {
+    uni.showToast({ title: '昵称更新失败', icon: 'none' })
   }
   finally {
     uni.hideLoading()
@@ -106,14 +139,12 @@ function handleLogout() {
       <view class="absolute left-0 right-0 top-0 h-45 rounded-b-[40rpx] bg-hero" />
 
       <view v-if="tokenStore.hasLogin" class="relative flex items-center gap-3 px-1 pb-5">
-        <button class="avatar-pick" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
-          <image
-            class="h-15 w-15 shrink-0 border-[4rpx] border-white/32 rounded-full bg-white/18"
-            :src="resolveAvatarSrc(userInfo.avatar)"
-            mode="aspectFill"
-            @error="onAvatarError"
-          />
-        </button>
+        <image
+          class="h-15 w-15 shrink-0 border-[4rpx] border-white/32 rounded-full bg-white/18"
+          :src="resolveAvatarSrc(userInfo.avatar)"
+          mode="aspectFill"
+          @error="onAvatarError"
+        />
         <view class="min-w-0 flex-1">
           <text class="text-[38rpx] text-white font-600">{{ userInfo.nickname || userInfo.username }}</text>
           <text class="mt-1.5 block text-[24rpx] text-white/78">账号：{{ userInfo.username }}</text>
@@ -141,6 +172,30 @@ function handleLogout() {
     </view>
 
     <view class="p-4">
+      <!-- 头像 / 昵称编辑 -->
+      <view v-if="tokenStore.hasLogin" class="mb-3 card">
+        <view class="profile-pick">
+          <button class="avatar-btn" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
+            <image
+              class="avatar-img"
+              :src="resolveAvatarSrc(userInfo.avatar)"
+              mode="aspectFill"
+              @error="onAvatarError"
+            />
+            <text class="avatar-tip">{{ hasAvatar ? '点击更换头像' : '选择微信头像' }}</text>
+          </button>
+          <input
+            v-model="nickname"
+            class="nickname-input"
+            type="nickname"
+            placeholder="点击填写昵称（可选）"
+            placeholder-class="nickname-ph"
+            @blur="saveNickname"
+            @confirm="saveNickname"
+          >
+        </view>
+      </view>
+
       <!-- 服务列表 -->
       <view class="mb-3 overflow-hidden card">
         <view
@@ -191,14 +246,54 @@ function handleLogout() {
 </template>
 
 <style lang="scss" scoped>
-.avatar-pick {
-  padding: 0;
-  margin: 0;
-  line-height: normal;
-  background: transparent;
+.profile-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40rpx 28rpx;
 }
 
-.avatar-pick::after {
+.avatar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+  background: transparent;
+  line-height: normal;
+}
+
+.avatar-btn::after {
   border: none;
+}
+
+.avatar-img {
+  width: 128rpx;
+  height: 128rpx;
+  border: 2rpx solid #ecedf0;
+  border-radius: 50%;
+  background: #f2f3f5;
+}
+
+.avatar-tip {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #86909c;
+}
+
+.nickname-input {
+  width: 360rpx;
+  height: 72rpx;
+  margin-top: 20rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  text-align: center;
+  color: #1d2129;
+  background: #f7f8fa;
+  border-radius: 16rpx;
+  box-sizing: border-box;
+}
+
+.nickname-ph {
+  color: #c9cdd4;
 }
 </style>

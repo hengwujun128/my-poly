@@ -140,6 +140,14 @@ export function wxBind(code: string) {
 }
 
 /**
+ * 更新当前用户个人信息（昵称等）
+ * PUT /v1/system/user/profile
+ */
+export function updateMyProfile(data: { nickName?: string }) {
+  return http.put('/system/user/profile', data)
+}
+
+/**
  * 上传并保存当前用户头像（需已登录）
  * POST /v1/system/user/profile/avatar
  * @param filePath 本地/临时文件路径（如 wx.chooseAvatar 返回的 avatarUrl）
