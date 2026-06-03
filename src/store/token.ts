@@ -11,6 +11,7 @@ import {
   refreshToken as _refreshToken,
   updateMyProfile,
   uploadUserAvatar,
+  wxBindAccount as _wxBindAccount,
   wxLogin as _wxLogin,
   getWxCode,
 } from '@/api/login'
@@ -253,6 +254,28 @@ export const useTokenStore = defineStore(
     }
 
     /**
+     * 非系统用户绑定系统账号：成功后用返回的新 token 重新建立登录态
+     */
+    const bindSystemAccount = async (username: string, password: string) => {
+      try {
+        const res = await _wxBindAccount(username, password)
+        await _postLogin(res)
+        uni.showToast({ title: '绑定成功', icon: 'success' })
+        return res
+      }
+      catch (error: any) {
+        uni.showToast({
+          title: getApiErrorMessage(error, '绑定失败，请检查账号密码'),
+          icon: 'none',
+        })
+        throw error
+      }
+      finally {
+        updateNowTime()
+      }
+    }
+
+    /**
      * 更新昵称（登录后调用），成功后刷新用户信息
      */
     const updateNickname = async (nickName: string) => {
@@ -392,6 +415,7 @@ export const useTokenStore = defineStore(
       phoneLogin,
       uploadAvatar,
       updateNickname,
+      bindSystemAccount,
       logout,
 
       // 认证状态判断（最常用的）

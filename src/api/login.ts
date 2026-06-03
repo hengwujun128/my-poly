@@ -22,6 +22,10 @@ export interface IGetInfoRes {
     userName: string
     nickName: string
     avatar?: string
+    /** '00' 系统用户 / '01' 非系统用户 */
+    userType?: string
+    /** 是否系统用户（后端按 userType 计算） */
+    isSystemUser?: boolean
     [key: string]: any
   }
   permissions: string[]
@@ -140,6 +144,16 @@ export function wxBind(code: string) {
 }
 
 /**
+ * 非系统用户绑定系统账号（迁移当前微信 openId 到该账号），返回新登录态 token
+ * POST /v1/wxBindAccount
+ */
+export function wxBindAccount(username: string, password: string) {
+  return http
+    .post<{ token: string }>('/wxBindAccount', { username, password }, undefined, undefined, { hideErrorToast: true })
+    .then(normalizeTokenRes)
+}
+
+/**
  * 更新当前用户个人信息（昵称等）
  * PUT /v1/system/user/profile
  */
@@ -188,5 +202,6 @@ export function mapUserInfo(res: IGetInfoRes): IUserInfoRes {
     nickname: res.user.nickName,
     avatar: resolveAvatarSrc(res.user.avatar),
     roles: res.roles,
+    isSystemUser: res.user.isSystemUser ?? (res.user.userType === '00'),
   }
 }

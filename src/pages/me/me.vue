@@ -66,6 +66,29 @@ watch(() => userInfo.value.nickname, (val) => {
   nickname.value = val || ''
 })
 
+// 非系统用户绑定系统账号
+const bindUsername = ref('')
+const bindPassword = ref('')
+
+async function doBindAccount() {
+  if (!bindUsername.value.trim() || !bindPassword.value) {
+    uni.showToast({ title: '请输入账号和密码', icon: 'none' })
+    return
+  }
+  uni.showLoading({ title: '绑定中...' })
+  try {
+    await tokenStore.bindSystemAccount(bindUsername.value.trim(), bindPassword.value)
+    bindUsername.value = ''
+    bindPassword.value = ''
+  }
+  catch {
+    // 错误提示已在 store 内处理
+  }
+  finally {
+    uni.hideLoading()
+  }
+}
+
 const hasAvatar = computed(() => {
   const src = userInfo.value.avatar
   return !!src && src !== DEFAULT_AVATAR
@@ -196,6 +219,31 @@ function handleLogout() {
         </view>
       </view>
 
+      <!-- 非系统用户：绑定系统账号 -->
+      <view v-if="tokenStore.hasLogin && !userInfo.isSystemUser" class="mb-3 card p-4">
+        <view class="mb-1.5 flex items-center gap-1.5">
+          <text class="text-[30rpx] text-ink font-600">绑定系统账号</text>
+          <text class="rounded-full bg-[rgba(255,125,0,0.12)] px-2 py-[2rpx] text-[20rpx] text-[#ff7d00]">非系统用户</text>
+        </view>
+        <text class="mb-3 block text-[24rpx] text-ink-3">你当前是非系统用户，绑定后将以系统账号身份登录。</text>
+        <input
+          v-model="bindUsername"
+          class="bind-input"
+          placeholder="系统账号"
+          placeholder-class="bind-ph"
+        >
+        <input
+          v-model="bindPassword"
+          class="bind-input mt-2.5"
+          password
+          placeholder="密码"
+          placeholder-class="bind-ph"
+        >
+        <view class="bind-btn mt-3.5" hover-class="opacity-80" @click="doBindAccount">
+          绑定
+        </view>
+      </view>
+
       <!-- 服务列表 -->
       <view class="mb-3 overflow-hidden card">
         <view
@@ -295,5 +343,32 @@ function handleLogout() {
 
 .nickname-ph {
   color: #c9cdd4;
+}
+
+.bind-input {
+  width: 100%;
+  height: 80rpx;
+  padding: 0 24rpx;
+  font-size: 28rpx;
+  color: #1d2129;
+  background: #f7f8fa;
+  border-radius: 16rpx;
+  box-sizing: border-box;
+}
+
+.bind-ph {
+  color: #c9cdd4;
+}
+
+.bind-btn {
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #fff;
+  background: #07c160;
+  border-radius: 40rpx;
 }
 </style>

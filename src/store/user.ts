@@ -13,6 +13,7 @@ const userInfoState: IUserInfoRes = {
   username: '',
   nickname: '',
   avatar: '/static/images/default-avatar.png',
+  isSystemUser: true,
 }
 
 export const useUserStore = defineStore(

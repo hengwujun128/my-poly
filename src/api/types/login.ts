@@ -33,6 +33,8 @@ export interface IUserInfoRes {
   /** 同时支持单角色和多角色，你自行选择一种就行 */
   role?: UserRole
   roles?: UserRole[]
+  /** 是否系统用户（管理员创建）。微信/手机号自助注册的为 false */
+  isSystemUser?: boolean
   [key: string]: any // 允许其他扩展字段
 }
 

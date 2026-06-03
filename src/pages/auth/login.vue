@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { getCode } from '@/api/login'
 import { PHONE_NEED_BIND_CODE, WX_NEED_BIND_CODE } from '@/constants/wx'
 import { useTokenStore } from '@/store/token'
+import { useUserStore } from '@/store/user'
 import { normalizeCaptchaSrc, persistCaptchaSvg } from '@/utils/captcha'
 import { navigateAfterLogin } from '@/utils/navigateAfterLogin'
 
@@ -15,6 +16,7 @@ definePage({
 })
 
 const tokenStore = useTokenStore()
+const userStore = useUserStore()
 const username = ref('admin')
 const password = ref('admin123456')
 const captchaCode = ref('')
@@ -137,6 +139,13 @@ function doWxLogin() {
           code: loginRes.code,
         })
         needBindHint.value = false
+        if (!userStore.userInfo.isSystemUser) {
+          uni.showToast({
+            title: '你当前不是系统用户，可在「我的」绑定系统账号',
+            icon: 'none',
+            duration: 2500,
+          })
+        }
         await afterLoginSuccess()
       }
       catch (error: any) {

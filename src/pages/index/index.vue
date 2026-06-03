@@ -123,8 +123,13 @@ function handleClick(item: EntryItem) {
         </view>
         <view class="h-[48rpx] w-[1rpx] bg-[#ebedf0]" />
         <view class="flex flex-1 flex-col items-center gap-[10rpx]">
-          <text class="text-[24rpx] text-ink-3">状态</text>
-          <text class="text-[28rpx] text-wxgreen font-semibold">已登录</text>
+          <text class="text-[24rpx] text-ink-3">用户类型</text>
+          <text
+            class="text-[24rpx]"
+            :class="userInfo.isSystemUser ? 'text-wxgreen' : 'text-[#ff7d00]'"
+          >
+            {{ userInfo.isSystemUser ? '系统用户' : '非系统用户' }}
+          </text>
         </view>
       </view>
     </view>
