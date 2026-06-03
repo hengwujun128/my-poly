@@ -109,13 +109,20 @@ async function onChooseAvatar(e: any) {
   uni.showLoading({ title: '上传中...' })
   try {
     await tokenStore.uploadAvatar(url)
+    uni.hideLoading()
     uni.showToast({ title: '头像已更新', icon: 'success' })
   }
-  catch {
-    uni.showToast({ title: '头像更新失败', icon: 'none' })
-  }
-  finally {
+  catch (err: any) {
     uni.hideLoading()
+    const msg = err?.errMsg || err?.msg || err?.message || ''
+    // 体验版/正式版若 uploadFile 域名未配置，errMsg 通常含 "url not in domain list"
+    const isDomain = /domain|not in.*list|illegal/i.test(msg)
+    uni.showToast({
+      title: isDomain ? '上传域名未配置，请联系管理员' : '头像更新失败',
+      icon: 'none',
+      duration: 2500,
+    })
+    console.error('头像更新失败:', msg)
   }
 }
 

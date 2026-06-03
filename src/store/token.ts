@@ -249,6 +249,8 @@ export const useTokenStore = defineStore(
       }
       catch (error) {
         console.error('上传头像失败:', error)
+        // 必须抛出，让页面能区分成功/失败并提示，否则体验版上传被拦也会误显示「已更新」
+        throw error
       }
     }
 

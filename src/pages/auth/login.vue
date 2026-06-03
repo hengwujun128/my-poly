@@ -180,26 +180,6 @@ onShow(() => {
     </view>
 
     <view class="login-card">
-      <!-- #ifdef MP-WEIXIN -->
-      <button class="btn-wx" :loading="wxLoading" :disabled="wxLoading" @tap="doWxLogin">
-        微信一键登录
-      </button>
-      <button
-        class="btn-phone"
-        open-type="getPhoneNumber"
-        :loading="phoneLoading"
-        :disabled="phoneLoading"
-        @getphonenumber="onGetPhoneNumber"
-      >
-        本机号码一键登录
-      </button>
-      <view class="split-line">
-        <view class="split-line__bar" />
-        <text class="split-line__text">账号密码登录</text>
-        <view class="split-line__bar" />
-      </view>
-      <!-- #endif -->
-
       <wd-cell-group border custom-class="field-group">
         <wd-cell title="账号" title-width="160rpx" center>
           <wd-input
@@ -247,6 +227,27 @@ onShow(() => {
       <wd-button block size="large" custom-class="btn-login" :loading="loading" @click="doLogin">
         登 录
       </wd-button>
+
+      <!-- #ifdef MP-WEIXIN -->
+      <view class="split-line">
+        <view class="split-line__bar" />
+        <text class="split-line__text">微信手机号登录</text>
+        <view class="split-line__bar" />
+      </view>
+      <button class="btn-wx" :loading="wxLoading" :disabled="wxLoading" @tap="doWxLogin">
+        微信一键登录
+      </button>
+      <button
+        class="btn-phone"
+        open-type="getPhoneNumber"
+        :loading="phoneLoading"
+        :disabled="phoneLoading"
+        @getphonenumber="onGetPhoneNumber"
+      >
+        本机号码一键登录
+      </button>
+
+      <!-- #endif -->
     </view>
   </view>
 </template>
@@ -401,7 +402,8 @@ onShow(() => {
   width: 200rpx;
   height: 80rpx;
   overflow: hidden;
-  background: #f2f3f5;
+
+  // background: #f2f3f5;
   border-radius: 8rpx;
 }
 
