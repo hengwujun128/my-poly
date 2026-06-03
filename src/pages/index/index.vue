@@ -76,7 +76,7 @@ const demoEntries: EntryItem[] = [
 ]
 
 const quickMenus: EntryItem[] = [
-  { title: '工作台', desc: '', icon: 'apps', color: APP_PRIMARY },
+  { title: '今日任务', desc: '', icon: 'calendar', color: APP_PRIMARY, path: '/pages/task/list' },
   { title: '消息', desc: '', icon: 'message', color: APP_WX_GREEN },
   { title: '数据图表', desc: '', icon: 'mind-mapping', color: '#36cfc9', path: '/pages-demo/lime-echarts/index' },
   { title: '设置', desc: '', icon: 'settings', color: '#ff9f43' },

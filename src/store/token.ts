@@ -147,12 +147,6 @@ export const useTokenStore = defineStore(
     }
 
     /**
-     * 微信登录
-     * 有的时候后端会用一个接口返回token和用户信息，有的时候会分开2个接口，一个获取token，一个获取用户信息
-     * （各有利弊，看业务场景和系统复杂度），这里使用2个接口返回的来模拟
-     * @returns 登录结果
-     */
-    /**
      * 微信登录（传入 uni.login 返回的 code）
      */
     const wxLogin = async (params?: { code?: string, nickName?: string, avatarUrl?: string }) => {
@@ -189,6 +183,32 @@ export const useTokenStore = defineStore(
       }
       finally {
         updateNowTime()
+      }
+    }
+
+    /**
+     * 静默微信登录（无 toast，用于订阅消息跳转等场景）
+     */
+    const silentWxLogin = async (): Promise<boolean> => {
+      updateNowTime()
+      if (hasLoginInfo.value && !isTokenExpired.value) {
+        return true
+      }
+      try {
+        const loginRes = await getWxCode()
+        if (!loginRes.code) {
+          return false
+        }
+        const res = await _wxLogin({ code: loginRes.code })
+        setTokenInfo(res)
+        const userStore = useUserStore()
+        await userStore.fetchUserInfo()
+        updateNowTime()
+        return true
+      }
+      catch (error) {
+        console.warn('silentWxLogin failed', error)
+        return false
       }
     }
 
@@ -413,6 +433,7 @@ export const useTokenStore = defineStore(
       // 核心API方法
       login,
       wxLogin,
+      silentWxLogin,
       phoneLogin,
       uploadAvatar,
       updateNickname,
