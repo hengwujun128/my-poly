@@ -183,14 +183,14 @@ onReachBottom(() => {
     <!-- Tab -->
     <view class="mb-3 flex gap-2">
       <view
-        class="flex-1 center rounded-xl py-2 text-[28rpx]"
+        class="center flex-1 rounded-xl py-2 text-[28rpx]"
         :class="activeTab === 'today' ? 'bg-primary text-white' : 'card text-ink-3'"
         @click="switchTab('today')"
       >
         今日任务
       </view>
       <view
-        class="flex-1 center rounded-xl py-2 text-[28rpx]"
+        class="center flex-1 rounded-xl py-2 text-[28rpx]"
         :class="activeTab === 'history' ? 'bg-primary text-white' : 'card text-ink-3'"
         @click="switchTab('history')"
       >
@@ -200,7 +200,7 @@ onReachBottom(() => {
 
     <!-- 订阅引导 -->
     <view class="mb-3 card p-4">
-      <text class="block text-[30rpx] text-ink font-600">任务提醒</text>
+      <text class="block text-[30rpx] text-ink font-semibold">任务提醒</text>
       <text class="mt-1.5 block text-[24rpx] text-ink-3">
         开启后，系统将在配置的时间点（默认 9:00 / 14:00 / 18:00）通过微信「任务操作提醒」通知你。
       </text>
@@ -222,11 +222,11 @@ onReachBottom(() => {
 
     <!-- 今日任务 -->
     <template v-if="activeTab === 'today'">
-      <view v-if="loading && tasks.length === 0" class="card p-6 center">
+      <view v-if="loading && tasks.length === 0" class="center card p-6">
         <text class="text-[26rpx] text-ink-3">加载中...</text>
       </view>
 
-      <view v-else-if="tasks.length === 0" class="card p-6 center">
+      <view v-else-if="tasks.length === 0" class="center card p-6">
         <text class="text-[26rpx] text-ink-3">今日暂无任务</text>
       </view>
 
@@ -239,7 +239,7 @@ onReachBottom(() => {
         >
           <view class="flex items-start justify-between gap-2">
             <view class="min-w-0 flex-1">
-              <text class="block text-[30rpx] text-ink font-600">{{ task.title }}</text>
+              <text class="block text-[30rpx] text-ink font-semibold">{{ task.title }}</text>
               <text class="mt-1 block text-[24rpx] text-ink-3">{{ getTaskSlotLabel(task.slot) }}</text>
             </view>
             <text class="shrink-0 text-[24rpx]" :class="statusClass(task)">
@@ -262,11 +262,11 @@ onReachBottom(() => {
 
     <!-- 历史任务 -->
     <template v-else>
-      <view v-if="historyLoading && historyTasks.length === 0" class="card p-6 center">
+      <view v-if="historyLoading && historyTasks.length === 0" class="center card p-6">
         <text class="text-[26rpx] text-ink-3">加载中...</text>
       </view>
 
-      <view v-else-if="historyTasks.length === 0" class="card p-6 center">
+      <view v-else-if="historyTasks.length === 0" class="center card p-6">
         <text class="text-[26rpx] text-ink-3">暂无历史任务</text>
       </view>
 
@@ -278,7 +278,7 @@ onReachBottom(() => {
         >
           <view class="flex items-start justify-between gap-2">
             <view class="min-w-0 flex-1">
-              <text class="block text-[30rpx] text-ink font-600">{{ task.title }}</text>
+              <text class="block text-[30rpx] text-ink font-semibold">{{ task.title }}</text>
               <text class="mt-1 block text-[24rpx] text-ink-3">
                 {{ formatTaskDate(task.taskDate) }} · {{ getTaskSlotLabel(task.slot) }}
               </text>
