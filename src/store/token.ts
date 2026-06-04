@@ -11,6 +11,7 @@ import {
   refreshToken as _refreshToken,
   updateMyProfile,
   uploadUserAvatar,
+  wxBind as _wxBind,
   wxBindAccount as _wxBindAccount,
   wxLogin as _wxLogin,
   getWxCode,
@@ -275,6 +276,20 @@ export const useTokenStore = defineStore(
     }
 
     /**
+     * 已登录用户绑定当前微信（账密/手机号用户订阅任务前调用）
+     */
+    const bindWechat = async () => {
+      const loginRes = await getWxCode()
+      if (!loginRes.code) {
+        throw new Error('获取微信登录凭证失败')
+      }
+      await _wxBind(loginRes.code)
+      const userStore = useUserStore()
+      await userStore.fetchUserInfo()
+      updateNowTime()
+    }
+
+    /**
      * 非系统用户绑定系统账号：成功后用返回的新 token 重新建立登录态
      */
     const bindSystemAccount = async (username: string, password: string) => {
@@ -437,6 +452,7 @@ export const useTokenStore = defineStore(
       phoneLogin,
       uploadAvatar,
       updateNickname,
+      bindWechat,
       bindSystemAccount,
       logout,
 

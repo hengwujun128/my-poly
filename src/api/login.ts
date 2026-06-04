@@ -26,6 +26,9 @@ export interface IGetInfoRes {
     userType?: string
     /** 是否系统用户（后端按 userType 计算） */
     isSystemUser?: boolean
+    /** 是否已绑定微信 openId（任务推送前提） */
+    hasWechatBound?: boolean
+    openId?: string | null
     [key: string]: any
   }
   permissions: string[]
@@ -203,5 +206,7 @@ export function mapUserInfo(res: IGetInfoRes): IUserInfoRes {
     avatar: resolveAvatarSrc(res.user.avatar),
     roles: res.roles,
     isSystemUser: res.user.isSystemUser ?? (res.user.userType === '00'),
+    hasWechatBound: !!res.user.hasWechatBound || !!res.user.openId,
+    openId: res.user.openId ?? undefined,
   }
 }

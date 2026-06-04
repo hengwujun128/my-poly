@@ -35,6 +35,9 @@ export interface IUserInfoRes {
   roles?: UserRole[]
   /** 是否系统用户（管理员创建）。微信/手机号自助注册的为 false */
   isSystemUser?: boolean
+  /** 是否已绑定微信（任务订阅推送前提） */
+  hasWechatBound?: boolean
+  openId?: string
   [key: string]: any // 允许其他扩展字段
 }
 

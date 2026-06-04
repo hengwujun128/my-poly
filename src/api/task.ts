@@ -51,28 +51,3 @@ export function completeTask(id: number) {
     method: 'POST',
   })
 }
-
-/** [调试] 生成今日任务 */
-export function debugGenerateTasks(userId?: number) {
-  return http<{ userCount: number, created: number }>({
-    url: '/task/debug/generate',
-    method: 'POST',
-    data: userId ? { userId } : {},
-  })
-}
-
-/** [调试] 推送到期任务 */
-export function debugPushTasks() {
-  return http<{ total: number, sent: number, failed: number, skipped: number }>({
-    url: '/task/debug/push',
-    method: 'POST',
-  })
-}
-
-/** [调试] 推送单条 */
-export function debugPushTask(id: number) {
-  return http<{ errcode: number, errmsg?: string }>({
-    url: `/task/debug/push/${id}`,
-    method: 'POST',
-  })
-}
