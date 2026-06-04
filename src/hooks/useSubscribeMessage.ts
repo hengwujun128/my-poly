@@ -14,6 +14,13 @@ export async function ensureWechatBoundForSubscribe(): Promise<boolean> {
   }
 
   const userStore = useUserStore()
+  if (userStore.userInfo.userId <= 0) {
+    await userStore.fetchUserInfo()
+  }
+  if (!userStore.userInfo.isSystemUser) {
+    uni.showToast({ title: '仅系统用户可开启任务提醒', icon: 'none', duration: 2500 })
+    return false
+  }
   if (!userStore.userInfo.hasWechatBound) {
     await userStore.fetchUserInfo()
   }

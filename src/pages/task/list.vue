@@ -35,6 +35,7 @@ const subscribing = ref(false)
 const highlightId = ref<number | null>(null)
 
 const userStore = useUserStore()
+const isSystemUser = computed(() => !!userStore.userInfo.isSystemUser)
 const wechatBound = computed(() => !!userStore.userInfo.hasWechatBound)
 
 async function loadToday() {
@@ -159,11 +160,18 @@ function formatTaskDate(dateStr: string) {
   return dateStr?.slice(0, 10) ?? dateStr
 }
 
+function goBindSystemAccount() {
+  uni.switchTab({ url: '/pages/me/me' })
+}
+
 onLoad(async (query) => {
   if (query?.id) {
     highlightId.value = Number(query.id)
   }
   await userStore.fetchUserInfo().catch(() => {})
+  if (!isSystemUser.value) {
+    return
+  }
   await loadToday()
 })
 
@@ -180,6 +188,21 @@ onReachBottom(() => {
 
 <template>
   <view class="min-h-screen bg-[#f2f3f5] p-4">
+    <view v-if="!isSystemUser" class="card p-6">
+      <text class="block text-[30rpx] text-ink font-semibold">员工任务</text>
+      <text class="mt-2 block text-[26rpx] text-ink-3 leading-relaxed">
+        任务提醒仅面向系统用户。你当前为微信体验账号，请先在「我的」绑定系统账号后再使用。
+      </text>
+      <view
+        class="mt-4 center rounded-xl bg-primary py-2.5 text-[28rpx] text-white"
+        hover-class="opacity-80"
+        @click="goBindSystemAccount"
+      >
+        前往「我的」绑定
+      </view>
+    </view>
+
+    <template v-else>
     <!-- Tab -->
     <view class="mb-3 flex gap-2">
       <view
@@ -295,6 +318,7 @@ onReachBottom(() => {
           加载中...
         </view>
       </view>
+    </template>
     </template>
   </view>
 </template>

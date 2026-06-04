@@ -75,12 +75,19 @@ const demoEntries: EntryItem[] = [
   },
 ]
 
-const quickMenus: EntryItem[] = [
+const allQuickMenus: EntryItem[] = [
   { title: '今日任务', desc: '', icon: 'calendar', color: APP_PRIMARY, path: '/pages/task/list' },
   { title: '消息', desc: '', icon: 'message', color: APP_WX_GREEN },
   { title: '数据图表', desc: '', icon: 'mind-mapping', color: '#36cfc9', path: '/pages-demo/lime-echarts/index' },
   { title: '设置', desc: '', icon: 'settings', color: '#ff9f43' },
 ]
+
+const quickMenus = computed(() => {
+  if (userInfo.value.isSystemUser) {
+    return allQuickMenus
+  }
+  return allQuickMenus.filter(item => item.title !== '今日任务')
+})
 
 function handleClick(item: EntryItem) {
   if (item.path) {
