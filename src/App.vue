@@ -27,7 +27,7 @@ onLaunch((options) => {
 })
 onShow(async (options) => {
   console.log('App.vue onShow', options)
-  // 订阅消息等场景：优先尝试静默微信登录，避免跳转登录页
+  // 订阅消息冷启动等：未登录时尝试静默 wxLogin（主动退出后会跳过，见 SKIP_SILENT_WX_LOGIN_KEY）
   if (isMpWeixin) {
     const tokenStore = useTokenStore()
     if (!tokenStore.hasLogin) {

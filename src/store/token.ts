@@ -16,7 +16,7 @@ import {
   wxLogin as _wxLogin,
   getWxCode,
 } from '@/api/login'
-import { WX_NEED_BIND_CODE } from '@/constants/wx'
+import { SKIP_SILENT_WX_LOGIN_KEY, WX_NEED_BIND_CODE } from '@/constants/wx'
 import { getApiErrorMessage } from '@/utils/apiError'
 import { isDoubleTokenRes, isSingleTokenRes } from '@/api/types/login'
 import { isDoubleTokenMode } from '@/utils'
@@ -111,6 +111,7 @@ export const useTokenStore = defineStore(
      * @param tokenInfo 登录返回的token信息
      */
     async function _postLogin(tokenInfo: IAuthLoginRes) {
+      uni.removeStorageSync(SKIP_SILENT_WX_LOGIN_KEY)
       setTokenInfo(tokenInfo)
       const userStore = useUserStore()
       await userStore.fetchUserInfo()
@@ -192,6 +193,9 @@ export const useTokenStore = defineStore(
      */
     const silentWxLogin = async (): Promise<boolean> => {
       updateNowTime()
+      if (uni.getStorageSync(SKIP_SILENT_WX_LOGIN_KEY)) {
+        return false
+      }
       if (hasLoginInfo.value && !isTokenExpired.value) {
         return true
       }
@@ -329,7 +333,6 @@ export const useTokenStore = defineStore(
      */
     const logout = async () => {
       try {
-        // TODO 实现自己的退出登录逻辑
         await _logout()
       }
       catch (error) {
@@ -337,16 +340,15 @@ export const useTokenStore = defineStore(
       }
       finally {
         updateNowTime()
-
-        // 无论成功失败，都需要清除本地token信息
-        // 清除存储的过期时间
+        tokenInfo.value = { ...tokenInfoState }
         uni.removeStorageSync('accessTokenExpireTime')
         uni.removeStorageSync('refreshTokenExpireTime')
-        console.log('退出登录-清除用户信息')
-        tokenInfo.value = { ...tokenInfoState }
+        // 与 pinia-plugin-persistedstate 的 store id 一致，避免退出后重编译仍从缓存恢复登录态
         uni.removeStorageSync('token')
         const userStore = useUserStore()
         userStore.clearUserInfo()
+        uni.removeStorageSync('user')
+        uni.setStorageSync(SKIP_SILENT_WX_LOGIN_KEY, '1')
       }
     }
 

@@ -149,14 +149,13 @@ function handleLogout() {
   uni.showModal({
     title: '提示',
     content: '确定要退出登录吗？',
-    success: (res) => {
-      if (res.confirm) {
-        tokenStore.logout()
-        uni.showToast({ title: '已退出登录', icon: 'success' })
-        setTimeout(() => {
-          uni.navigateTo({ url: LOGIN_PAGE })
-        }, 500)
+    success: async (res) => {
+      if (!res.confirm) {
+        return
       }
+      await tokenStore.logout()
+      uni.showToast({ title: '已退出登录', icon: 'success' })
+      uni.reLaunch({ url: LOGIN_PAGE })
     },
   })
 }
