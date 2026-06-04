@@ -16,8 +16,8 @@ definePage({
 
 const tokenStore = useTokenStore()
 const userStore = useUserStore()
-const username = ref('admin')
-const password = ref('admin123456')
+const username = ref('')
+const password = ref('')
 const captchaCode = ref('')
 const captchaUuid = ref('')
 const captchaSvg = ref('')
