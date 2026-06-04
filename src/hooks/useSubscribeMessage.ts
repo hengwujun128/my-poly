@@ -1,98 +1,84 @@
-import { WX_BIND_CONFLICT_CODE } from '@/constants/wx'
-import { getApiErrorMessage } from '@/utils/apiError'
+import { getWxBindErrorMessage, isWxBindConflict } from '@/utils/wxBindError'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 
-/**
- * 订阅前确保当前账号已绑定微信 openId（账密/手机号用户须先 wxBind）
- */
-export async function ensureWechatBoundForSubscribe(): Promise<boolean> {
-  const tokenStore = useTokenStore()
-  if (!tokenStore.hasLogin) {
-    uni.showToast({ title: '请先登录', icon: 'none' })
-    return false
-  }
+export type TaskSubscribeResult = 'accept' | 'reject' | 'ban' | 'unknown'
 
-  const userStore = useUserStore()
-  if (userStore.userInfo.userId <= 0) {
-    await userStore.fetchUserInfo()
-  }
-  if (!userStore.userInfo.isSystemUser) {
-    uni.showToast({ title: '仅系统用户可开启任务提醒', icon: 'none', duration: 2500 })
-    return false
-  }
-  if (!userStore.userInfo.hasWechatBound) {
-    await userStore.fetchUserInfo()
-  }
-  if (userStore.userInfo.hasWechatBound) {
-    return true
-  }
-
-  // #ifdef MP-WEIXIN
-  try {
-    uni.showLoading({ title: '绑定微信中...', mask: true })
-    await tokenStore.bindWechat()
-    uni.hideLoading()
-    return true
-  }
-  catch (error: any) {
-    uni.hideLoading()
-    const code = error?.data?.code ?? error?.code
-    const msg = getApiErrorMessage(error, '绑定微信失败')
-    if (code === WX_BIND_CONFLICT_CODE) {
-      uni.showToast({ title: msg, icon: 'none', duration: 3000 })
-    }
-    else {
-      uni.showToast({ title: msg, icon: 'none' })
-    }
-    return false
-  }
-  // #endif
-
-  // #ifndef MP-WEIXIN
-  uni.showToast({ title: '仅微信小程序支持', icon: 'none' })
-  return false
-  // #endif
+function getTaskTemplateId(): string | undefined {
+  const tmplId = import.meta.env.VITE_WX_TASK_TMPL_ID as string | undefined
+  return tmplId?.trim() || undefined
 }
 
 /**
- * 请求任务提醒订阅（一次性模板，须用户点击触发；订阅前先 wxBind）
+ * 开启任务提醒：先弹订阅（须在点击栈里同步发起），接受后再补 wxBind
  */
-export async function requestTaskSubscribe(): Promise<'accept' | 'reject' | 'ban' | 'unknown'> {
-  const bound = await ensureWechatBoundForSubscribe()
-  if (!bound) {
+export async function requestTaskSubscribe(): Promise<TaskSubscribeResult> {
+  const tokenStore = useTokenStore()
+  const userStore = useUserStore()
+
+  if (!tokenStore.hasLogin) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    return 'unknown'
+  }
+  if (!userStore.userInfo.isSystemUser) {
+    uni.showToast({ title: '仅系统用户可开启任务提醒', icon: 'none', duration: 2500 })
     return 'unknown'
   }
 
-  const tmplId = import.meta.env.VITE_WX_TASK_TMPL_ID as string | undefined
+  const tmplId = getTaskTemplateId()
   if (!tmplId) {
     uni.showToast({ title: '未配置订阅模板 ID', icon: 'none' })
     return 'unknown'
   }
 
   // #ifdef MP-WEIXIN
-  try {
-    const res = await uni.requestSubscribeMessage({ tmplIds: [tmplId] })
-    const status = res[tmplId] as string | undefined
-    if (status === 'accept') {
-      uni.showToast({ title: '已开启任务提醒', icon: 'success' })
-      return 'accept'
+  const result = await new Promise<TaskSubscribeResult>((resolve) => {
+    uni.requestSubscribeMessage({
+      tmplIds: [tmplId],
+      success: (res) => {
+        const status = res[tmplId] as string | undefined
+        if (status === 'accept') {
+          uni.showToast({ title: '已开启任务提醒', icon: 'success' })
+          resolve('accept')
+        }
+        else if (status === 'reject') {
+          uni.showToast({ title: '你已拒绝订阅', icon: 'none' })
+          resolve('reject')
+        }
+        else if (status === 'ban') {
+          uni.showToast({ title: '订阅已被禁用', icon: 'none' })
+          resolve('ban')
+        }
+        else {
+          resolve('unknown')
+        }
+      },
+      fail: (error) => {
+        console.error('requestSubscribeMessage failed', error)
+        uni.showToast({ title: '订阅请求失败', icon: 'none' })
+        resolve('unknown')
+      },
+    })
+  })
+
+  if (result === 'accept' && !userStore.userInfo.hasWechatBound) {
+    try {
+      uni.showLoading({ title: '绑定微信中...', mask: true })
+      await tokenStore.bindWechat()
     }
-    if (status === 'reject') {
-      uni.showToast({ title: '你已拒绝订阅', icon: 'none' })
-      return 'reject'
+    catch (error: unknown) {
+      uni.showToast({
+        title: getWxBindErrorMessage(error, '绑定微信失败，推送可能无法送达'),
+        icon: 'none',
+        duration: isWxBindConflict(error) ? 3500 : 2500,
+      })
     }
-    if (status === 'ban') {
-      uni.showToast({ title: '订阅已被禁用', icon: 'none' })
-      return 'ban'
+    finally {
+      uni.hideLoading()
     }
-    return 'unknown'
   }
-  catch (error) {
-    console.error('requestSubscribeMessage failed', error)
-    uni.showToast({ title: '订阅请求失败', icon: 'none' })
-    return 'unknown'
-  }
+
+  return result
   // #endif
 
   // #ifndef MP-WEIXIN

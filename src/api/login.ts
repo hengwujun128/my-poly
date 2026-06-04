@@ -143,7 +143,7 @@ export function phoneLogin(data: IPhoneLoginParams) {
  * POST /v1/wxBind
  */
 export function wxBind(code: string) {
-  return http.post<{ bound: boolean }>('/wxBind', { code })
+  return http.post<{ bound: boolean }>('/wxBind', { code }, undefined, undefined, { hideErrorToast: true })
 }
 
 /**

@@ -126,7 +126,6 @@ async function handleSubscribe() {
   subscribing.value = true
   try {
     await requestTaskSubscribe()
-    await userStore.fetchUserInfo()
   }
   finally {
     subscribing.value = false

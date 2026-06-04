@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { ref } from 'vue'
-import { getCode } from '@/api/login'
+import { getCode, getWxCode } from '@/api/login'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { normalizeCaptchaSrc, persistCaptchaSvg } from '@/utils/captcha'
@@ -147,8 +147,17 @@ async function onGetPhoneNumber(e: any) {
   }
   phoneLoading.value = true
   try {
+    let wxCode: string | undefined
+    try {
+      const wxRes = await getWxCode()
+      wxCode = wxRes.code
+    }
+    catch {
+      // 无 wxCode 时仍可手机号登录，订阅前会再 wxBind
+    }
     await tokenStore.phoneLogin({
       phoneCode: e.detail.code,
+      wxCode,
     })
     await afterLoginSuccess()
   }
