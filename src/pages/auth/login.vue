@@ -183,7 +183,7 @@ onShow(() => {
 <template>
   <view class="login-page">
     <view class="login-header">
-      <image class="login-logo" src="/static/logo.svg" mode="aspectFit" />
+      <image class="login-logo" src="/static/logo_sunshine_building.svg" mode="aspectFit" />
       <text class="login-title">my-poly</text>
       <text class="login-subtitle">欢迎回来，请登录您的账号</text>
     </view>
