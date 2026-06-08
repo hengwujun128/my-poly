@@ -299,6 +299,12 @@ onShow(() => {
 
       <!-- #endif -->
 
+      <view class="split-line">
+        <view class="split-line__bar" />
+        <text class="split-line__text">用户协议和隐私政策</text>
+        <view class="split-line__bar" />
+      </view>
+
       <view class="agreement-row" @tap="agreedTerms = !agreedTerms">
         <view class="agreement-check" :class="{ 'agreement-check--on': agreedTerms }">
           <wd-icon v-if="agreedTerms" name="check" size="20rpx" color="#fff" />
