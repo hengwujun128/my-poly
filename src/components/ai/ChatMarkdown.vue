@@ -1,15 +1,33 @@
 <script lang="ts" setup>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import MpHtml from 'mp-html/dist/uni-app/components/mp-html/mp-html.vue'
-import { MP_HTML_TAG_STYLE, renderMarkdownToHtml } from '@/utils/ai/markdown'
-import 'katex/dist/katex.min.css'
-import 'highlight.js/styles/github-dark.css'
 
 const props = defineProps<{
   content: string
 }>()
 
+// #ifdef MP-WEIXIN
+const html = ref('')
+const tagStyle = ref<Record<string, string>>({})
+let renderMarkdownToHtml: ((markdown: string) => string) | null = null
+
+watch(() => props.content, async (content) => {
+  if (!renderMarkdownToHtml) {
+    const mod = await AsyncImport('@/pages-demo/shared/markdown')
+    renderMarkdownToHtml = mod.renderMarkdownToHtml
+    tagStyle.value = mod.MP_HTML_TAG_STYLE
+  }
+  html.value = renderMarkdownToHtml!(content)
+}, { immediate: true })
+// #endif
+
+// #ifndef MP-WEIXIN
+import { MP_HTML_TAG_STYLE, renderMarkdownToHtml } from '@/pages-demo/shared/markdown'
+import 'katex/dist/katex.min.css'
+
 const html = computed(() => renderMarkdownToHtml(props.content))
+const tagStyle = MP_HTML_TAG_STYLE
+// #endif
 
 function onLinkTap(e: { href?: string }) {
   const href = e.href ?? ''
@@ -52,7 +70,7 @@ function onImgTap(e: { src?: string }) {
     <MpHtml
       v-if="html"
       :content="html"
-      :tag-style="MP_HTML_TAG_STYLE"
+      :tag-style="tagStyle"
       selectable
       @linktap="onLinkTap"
       @imgtap="onImgTap"
@@ -62,20 +80,6 @@ function onImgTap(e: { src?: string }) {
 </template>
 
 <style scoped>
-.chat-markdown :deep(.code-block-header) {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8rpx 16rpx;
-  background: #2d2d2d;
-  color: #ccc;
-  font-size: 22rpx;
-}
-
-.chat-markdown :deep(.code-copy) {
-  color: #7c5cfc;
-}
-
 .chat-markdown :deep(.katex-block) {
   overflow-x: auto;
   margin: 16rpx 0;

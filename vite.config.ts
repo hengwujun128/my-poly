@@ -99,8 +99,8 @@ export default defineConfig(({ command, mode }) => {
         enable: isMpWeixin
           ? {
               'optimization': true,
+              // 主包 AI 页动态 import 分包 markdown，需开启分包异步化
               'async-import': true,
-              // 微信小程序「过滤无依赖文件」无法识别 *-vendor.js 的动态引用，关闭组件异步分包
               'async-component': false,
             }
           : true,
