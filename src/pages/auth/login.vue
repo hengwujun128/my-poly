@@ -1,11 +1,43 @@
 <script lang="ts" setup>
 import { onLoad, onShow } from '@dcloudio/uni-app'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { getCode, getWxCode } from '@/api/login'
+import {
+  AGREEMENT_STORAGE_KEY,
+  PRIVACY_POLICY_PAGE,
+  USER_AGREEMENT_PAGE,
+} from '@/constants/legal'
 import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { normalizeCaptchaSrc, persistCaptchaSvg } from '@/utils/captcha'
 import { navigateAfterLogin } from '@/utils/navigateAfterLogin'
+
+const agreedTerms = ref(!!uni.getStorageSync(AGREEMENT_STORAGE_KEY))
+
+watch(agreedTerms, (val) => {
+  if (val) {
+    uni.setStorageSync(AGREEMENT_STORAGE_KEY, true)
+  }
+  else {
+    uni.removeStorageSync(AGREEMENT_STORAGE_KEY)
+  }
+})
+
+function ensureAgreedTerms(): boolean {
+  if (agreedTerms.value) {
+    return true
+  }
+  uni.showToast({ title: '请先阅读并同意相关协议', icon: 'none' })
+  return false
+}
+
+function openUserAgreement() {
+  uni.navigateTo({ url: USER_AGREEMENT_PAGE })
+}
+
+function openPrivacyPolicy() {
+  uni.navigateTo({ url: PRIVACY_POLICY_PAGE })
+}
 
 definePage({
   excludeLoginPath: true,
@@ -68,6 +100,9 @@ async function doLogin() {
     await afterLoginSuccess()
     return
   }
+  if (!ensureAgreedTerms()) {
+    return
+  }
   if (!username.value || !password.value || !captchaCode.value) {
     uni.showToast({ title: '请填写完整信息', icon: 'none' })
     return
@@ -97,6 +132,9 @@ async function doLogin() {
 function doWxLogin() {
   if (tokenStore.hasLogin) {
     afterLoginSuccess()
+    return
+  }
+  if (!ensureAgreedTerms()) {
     return
   }
   // #ifdef MP-WEIXIN
@@ -138,6 +176,9 @@ function doWxLogin() {
 async function onGetPhoneNumber(e: any) {
   if (tokenStore.hasLogin) {
     await afterLoginSuccess()
+    return
+  }
+  if (!ensureAgreedTerms()) {
     return
   }
   // #ifdef MP-WEIXIN
@@ -257,6 +298,18 @@ onShow(() => {
       </button>
 
       <!-- #endif -->
+
+      <view class="agreement-row" @tap="agreedTerms = !agreedTerms">
+        <view class="agreement-check" :class="{ 'agreement-check--on': agreedTerms }">
+          <wd-icon v-if="agreedTerms" name="check" size="20rpx" color="#fff" />
+        </view>
+        <view class="agreement-text">
+          <text class="agreement-plain">我已阅读并同意</text>
+          <text class="agreement-link" @tap.stop="openUserAgreement">《用户服务协议》</text>
+          <text class="agreement-plain">及</text>
+          <text class="agreement-link" @tap.stop="openPrivacyPolicy">《隐私政策》</text>
+        </view>
+      </view>
     </view>
   </view>
 </template>
@@ -442,5 +495,46 @@ onShow(() => {
   height: 96rpx !important;
   border-radius: 48rpx !important;
   font-size: 32rpx !important;
+}
+
+.agreement-row {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 32rpx;
+  gap: 12rpx;
+}
+
+.agreement-check {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 32rpx;
+  height: 32rpx;
+  margin-top: 4rpx;
+  border: 2rpx solid #c9cdd4;
+  border-radius: 50%;
+  box-sizing: border-box;
+  transition: all 0.2s;
+}
+
+.agreement-check--on {
+  border-color: #4d80f0;
+  background: #4d80f0;
+}
+
+.agreement-text {
+  flex: 1;
+  font-size: 24rpx;
+  line-height: 1.6;
+  color: #86909c;
+}
+
+.agreement-plain {
+  color: #86909c;
+}
+
+.agreement-link {
+  color: #4d80f0;
 }
 </style>
