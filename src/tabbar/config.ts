@@ -31,6 +31,12 @@ export const nativeTabbarList: NativeTabBarItem[] = [
     text: '首页',
   },
   {
+    iconPath: 'static/tabbar/home.png',
+    selectedIconPath: 'static/tabbar/homeHL.png',
+    pagePath: 'pages/ai/index',
+    text: 'AI助手',
+  },
+  {
     iconPath: 'static/tabbar/personal.png',
     selectedIconPath: 'static/tabbar/personalHL.png',
     pagePath: 'pages/me/me',
@@ -46,6 +52,12 @@ export const customTabbarList: CustomTabBarItem[] = [
     pagePath: 'pages/index/index',
     iconType: 'wot',
     icon: 'home',
+  },
+  {
+    text: 'AI助手',
+    pagePath: 'pages/ai/index',
+    iconType: 'wot',
+    icon: 'robot',
   },
   {
     pagePath: 'pages/me/me',

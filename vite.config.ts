@@ -207,17 +207,26 @@ export default defineConfig(({ command, mode }) => {
       hmr: true,
       port: Number.parseInt(VITE_APP_PORT, 10),
       // 仅 H5 端生效，其他端不生效（其他端走build，不走devServer)
-      proxy: JSON.parse(VITE_APP_PROXY_ENABLE)
-        ? {
-            [VITE_APP_PROXY_PREFIX]: {
-              target: VITE_SERVER_BASEURL,
-              changeOrigin: true,
-              // 后端有/api前缀则不做处理，没有则需要去掉
-              rewrite: path =>
-                path.replace(new RegExp(`^${VITE_APP_PROXY_PREFIX}`), ''),
-            },
-          }
-        : undefined,
+      proxy: {
+        // DeepSeek API 代理：H5 浏览器直连存在 CORS 限制，开发环境统一走代理
+        '/deepseek': {
+          target: 'https://api.deepseek.com',
+          changeOrigin: true,
+          secure: true,
+          rewrite: path => path.replace(/^\/deepseek/, ''),
+        },
+        ...(JSON.parse(VITE_APP_PROXY_ENABLE)
+          ? {
+              [VITE_APP_PROXY_PREFIX]: {
+                target: VITE_SERVER_BASEURL,
+                changeOrigin: true,
+                // 后端有/api前缀则不做处理，没有则需要去掉
+                rewrite: (path: string) =>
+                  path.replace(new RegExp(`^${VITE_APP_PROXY_PREFIX}`), ''),
+              },
+            }
+          : {}),
+      },
     },
     esbuild: {
       drop: VITE_DELETE_CONSOLE === 'true' ? ['console', 'debugger'] : [],

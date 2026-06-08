@@ -47,10 +47,11 @@ const httpInterceptor = {
       ...options.header,
     }
     // 3. 添加 token 请求头标识
+    // 注意：若调用方已显式设置 Authorization（如直连 DeepSeek 的第三方 Key），则不覆盖
     const tokenStore = useTokenStore()
     const token = tokenStore.updateNowTime().validToken
 
-    if (token) {
+    if (token && !options.header.Authorization && !options.header.authorization) {
       options.header.Authorization = `Bearer ${token}`
     }
     return options

@@ -31,6 +31,12 @@ interface ImportMetaEnv {
   readonly VITE_AUTH_MODE: 'single' | 'double'
   /** 是否清除console */
   readonly VITE_DELETE_CONSOLE: string
+  /** DeepSeek API Key（前端直连 demo，生产勿用） */
+  readonly VITE_DEEPSEEK_API_KEY?: string
+  /** DeepSeek API Base URL */
+  readonly VITE_DEEPSEEK_BASE_URL?: string
+  /** DeepSeek 默认模型 */
+  readonly VITE_DEEPSEEK_MODEL?: string
   // 更多环境变量...
 }
 
