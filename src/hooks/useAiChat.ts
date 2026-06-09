@@ -117,11 +117,12 @@ export function useAiChat() {
         onError: (error) => {
           streaming.value = false
           streamController = null
-          errorMessage.value = error.message
+          const message = error.message || '请求失败'
+          errorMessage.value = message
           if (!streamContent.value) {
             store.removeLastAssistantMessage()
           }
-          uni.showToast({ title: error.message, icon: 'none' })
+          uni.showToast({ title: message, icon: 'none', duration: 3000 })
         },
       },
     })

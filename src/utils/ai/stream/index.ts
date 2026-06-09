@@ -4,7 +4,7 @@ import { createFetchStream } from './fetch'
 import { createMpStream } from './mp'
 
 /**
- * 三端流式分流入口
+ * 三端流式分流
  * - 微信小程序：enableChunked
  * - H5 / App：fetch ReadableStream
  */

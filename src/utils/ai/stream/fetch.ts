@@ -1,6 +1,7 @@
 import type { CreateStreamParams } from './types'
 import { SseParser } from '../sseParser'
 import { getDeepSeekChatUrl } from '../config'
+import { formatChatCompletionsError } from './error'
 
 /**
  * H5 / App 流式请求（fetch + ReadableStream）
@@ -30,14 +31,12 @@ export function createFetchStream(params: CreateStreamParams) {
       })
 
       if (!response.ok) {
-        let message = `请求失败 (${response.status})`
+        let errData: unknown
         try {
-          const errBody = await response.json() as { error?: { message?: string } }
-          if (errBody.error?.message)
-            message = errBody.error.message
+          errData = await response.text()
         }
         catch { /* ignore */ }
-        throw new Error(message)
+        throw new Error(formatChatCompletionsError(response.status, errData))
       }
 
       const reader = response.body?.getReader()
