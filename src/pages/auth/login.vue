@@ -52,6 +52,7 @@ const username = ref('')
 const password = ref('')
 const captchaCode = ref('')
 const captchaUuid = ref('')
+const captchaSvg = ref('')
 const captchaImg = ref('')
 const captchaLoading = ref(false)
 const captchaError = ref('')
@@ -60,24 +61,21 @@ const wxLoading = ref(false)
 const phoneLoading = ref(false)
 const redirect = ref('')
 
-function onCaptchaImgError() {
-  captchaImg.value = ''
-  captchaError.value = '点击重试'
-}
-
 async function refreshCaptcha() {
   captchaLoading.value = true
   captchaError.value = ''
   try {
     const res = await getCode()
     captchaUuid.value = res.uuid
+    captchaSvg.value = res.img || ''
     captchaImg.value = await persistCaptchaSvg(res.img || '') || normalizeCaptchaSrc(res.img)
-    if (!captchaImg.value) {
+    if (!captchaSvg.value) {
       captchaError.value = '加载失败'
     }
   }
   catch {
     captchaImg.value = ''
+    captchaSvg.value = ''
     captchaError.value = '点击重试'
     uni.showToast({ title: '验证码加载失败', icon: 'none' })
   }
@@ -259,13 +257,17 @@ onShow(() => {
             />
             <view class="captcha-img-wrap" @tap.stop="refreshCaptcha">
               <wd-loading v-if="captchaLoading" size="22px" />
+              <!-- #ifdef H5 -->
+              <view v-else-if="captchaSvg" class="captcha-svg" v-html="captchaSvg" />
+              <!-- #endif -->
+              <!-- #ifndef H5 -->
               <image
                 v-else-if="captchaImg"
                 :src="captchaImg"
                 class="captcha-img"
                 mode="aspectFit"
-                @error="onCaptchaImgError"
               />
+              <!-- #endif -->
               <text v-else class="captcha-fallback">{{ captchaError || '刷新' }}</text>
             </view>
           </view>
@@ -476,6 +478,17 @@ onShow(() => {
 .captcha-img {
   width: 100%;
   height: 100%;
+}
+
+.captcha-svg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  :deep(svg) {
+    width: 180rpx;
+    height: 64rpx;
+  }
 }
 
 .captcha-fallback {
