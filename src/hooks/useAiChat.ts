@@ -1,9 +1,9 @@
-import type { DeepSeekStreamController } from '@/api/ai'
-import { DEEPSEEK_DEFAULTS, DEEPSEEK_MODELS } from '@/api/ai'
+import type { StreamController } from '@/api/ai'
+import type { AiProviderId } from '@/utils/ai/providers/types'
 import { computed, onUnmounted, ref } from 'vue'
 import { useAiChatStore } from '@/store/aiChat'
-import { assertDeepSeekApiKey } from '@/utils/ai/config'
-import { createDeepSeekStream } from '@/utils/ai/stream'
+import { AI_PROVIDER_LIST, getAiProvider } from '@/utils/ai/providers/registry'
+import { createChatStream } from '@/utils/ai/stream'
 
 export function useAiChat() {
   const store = useAiChatStore()
@@ -15,11 +15,18 @@ export function useAiChat() {
   const errorMessage = ref('')
   const inputText = ref('')
 
-  let streamController: DeepSeekStreamController | null = null
+  let streamController: StreamController | null = null
   let assistantMessageId = ''
+
+  const provider = computed(() => getAiProvider(store.providerId))
 
   const canSend = computed(() => !streaming.value && inputText.value.trim().length > 0)
   const displayMessages = computed(() => store.messages)
+
+  const activeProviderId = computed({
+    get: () => store.providerId,
+    set: (val: AiProviderId) => { store.setProvider(val) },
+  })
 
   const activeModel = computed({
     get: () => store.model,
@@ -28,19 +35,17 @@ export function useAiChat() {
 
   const thinkingEnabled = computed({
     get: () => store.thinkingEnabled,
-    set: (val: boolean) => {
-      store.thinkingEnabled = val
-      if (val && store.model === DEEPSEEK_MODELS.chat)
-        store.model = DEEPSEEK_MODELS.reasoner
-      if (!val && store.model === DEEPSEEK_MODELS.reasoner)
-        store.model = DEEPSEEK_MODELS.chat
-    },
+    set: (val: boolean) => { store.thinkingEnabled = val },
   })
 
   const webEnabled = computed({
     get: () => store.webEnabled,
     set: (val: boolean) => { store.webEnabled = val },
   })
+
+  const supportsThinking = computed(() => provider.value.capabilities.thinking)
+  const supportsWeb = computed(() => provider.value.capabilities.web)
+  const thinkingLabel = computed(() => provider.value.capabilities.thinkingLabel ?? '深度思考')
 
   function stop() {
     streamController?.abort()
@@ -62,9 +67,10 @@ export function useAiChat() {
       return
 
     errorMessage.value = ''
+    const currentProvider = provider.value
 
     try {
-      assertDeepSeekApiKey()
+      currentProvider.assertApiKey()
     }
     catch (error) {
       errorMessage.value = error instanceof Error ? error.message : 'API Key 未配置'
@@ -78,31 +84,43 @@ export function useAiChat() {
     }
 
     const messages = store.buildChatMessages()
+    const resolvedModel = currentProvider.resolveModel(store.model, {
+      thinkingEnabled: store.thinkingEnabled,
+    })
 
-    const assistant = store.addMessage({ role: 'assistant', content: '', reasoning: '' })
+    const assistant = store.addMessage({
+      role: 'assistant',
+      content: '',
+      ...(store.thinkingEnabled ? { reasoning: '' } : {}),
+    })
     assistantMessageId = assistant.id
     streamContent.value = ''
     streamReasoning.value = ''
     streaming.value = true
 
-    const apiKey = assertDeepSeekApiKey()
+    const apiKey = currentProvider.assertApiKey()
+    const streamOptions = {
+      model: resolvedModel,
+      messages,
+      max_tokens: currentProvider.defaults.maxTokens,
+      temperature: currentProvider.defaults.temperature,
+    }
+    const body = currentProvider.buildStreamPayload(streamOptions, {
+      thinkingEnabled: store.thinkingEnabled,
+      webEnabled: store.webEnabled,
+    })
 
-    streamController = createDeepSeekStream({
+    streamController = createChatStream({
+      chatUrl: currentProvider.getChatCompletionsUrl(),
       apiKey,
-      options: {
-        model: store.model,
-        messages,
-        stream: true,
-        max_tokens: DEEPSEEK_DEFAULTS.maxTokens,
-        temperature: DEEPSEEK_DEFAULTS.temperature,
-      },
+      body,
       callbacks: {
-        onDelta: ({ content, reasoning }) => {
-          if (content) {
-            streamContent.value += content
+        onDelta: ({ content: deltaContent, reasoning }) => {
+          if (deltaContent) {
+            streamContent.value += deltaContent
             store.updateMessage(assistantMessageId, { content: streamContent.value })
           }
-          if (reasoning) {
+          if (reasoning && store.thinkingEnabled) {
             streamReasoning.value += reasoning
             store.updateMessage(assistantMessageId, {
               content: streamContent.value,
@@ -162,9 +180,15 @@ export function useAiChat() {
     inputText,
     canSend,
     displayMessages,
+    activeProviderId,
     activeModel,
+    providerList: AI_PROVIDER_LIST,
+    currentProvider: provider,
     thinkingEnabled,
     webEnabled,
+    supportsThinking,
+    supportsWeb,
+    thinkingLabel,
     sessions: computed(() => store.sortedSessions),
     currentSessionId: computed(() => store.currentSessionId),
     currentSession: computed(() => store.currentSession),

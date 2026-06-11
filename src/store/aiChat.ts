@@ -1,7 +1,8 @@
-import type { AiMessage, AiSession, DeepSeekChatMessage } from '@/api/ai'
-import { DEEPSEEK_DEFAULTS } from '@/api/ai'
+import type { AiMessage, AiSession, ChatMessage } from '@/api/ai'
+import type { AiProviderId } from '@/utils/ai/providers/types'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
+import { getAiProvider, getDefaultAiProviderId } from '@/utils/ai/providers/registry'
 
 function createId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
@@ -22,9 +23,23 @@ export const useAiChatStore = defineStore(
   () => {
     const sessions = ref<AiSession[]>([])
     const currentSessionId = ref('')
-    const model = ref(import.meta.env.VITE_DEEPSEEK_MODEL || 'deepseek-chat')
-    const thinkingEnabled = ref(false)
+    const providerId = ref<AiProviderId>(getDefaultAiProviderId())
+    const model = ref(getAiProvider(providerId.value).getDefaultModel())
+    /** 各 Provider 独立的深度思考开关，避免 DeepSeek 状态污染千问 */
+    const thinkingByProvider = ref<Record<AiProviderId, boolean>>({
+      deepseek: false,
+      qwen: false,
+    })
     const webEnabled = ref(false)
+
+    const thinkingEnabled = computed({
+      get: () => thinkingByProvider.value[providerId.value] ?? false,
+      set: (val: boolean) => {
+        thinkingByProvider.value[providerId.value] = val
+        const current = getAiProvider(providerId.value)
+        model.value = current.resolveModel(model.value, { thinkingEnabled: val })
+      },
+    })
 
     const currentSession = computed(() => {
       return sessions.value.find(s => s.id === currentSessionId.value) ?? null
@@ -47,6 +62,14 @@ export const useAiChatStore = defineStore(
         sessions.value.unshift(session)
         currentSessionId.value = session.id
       }
+    }
+
+    function setProvider(id: AiProviderId) {
+      if (providerId.value === id)
+        return
+      providerId.value = id
+      model.value = getAiProvider(id).getDefaultModel()
+      webEnabled.value = false
     }
 
     function createSession() {
@@ -133,32 +156,44 @@ export const useAiChatStore = defineStore(
         session.messages.pop()
     }
 
-    /** 组装 DeepSeek 多轮上下文（截断最近 N 轮） */
-    function buildChatMessages(): DeepSeekChatMessage[] {
+    /** 组装多轮上下文（按当前 Provider 截断） */
+    function buildChatMessages(): ChatMessage[] {
       const session = currentSession.value
       if (!session)
         return []
 
-      const maxMessages = DEEPSEEK_DEFAULTS.maxHistoryRounds * 2
-      const recent = session.messages.slice(-maxMessages)
+      const provider = getAiProvider(providerId.value)
+      const recent = provider.buildChatMessages(
+        session.messages
+          .filter(m => m.role === 'user' || m.role === 'assistant')
+          .map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+      )
       return recent
-        .filter(m => m.role === 'user' || m.role === 'assistant')
-        .map(m => ({
-          role: m.role,
-          content: m.content,
-        }))
     }
 
     function initStore() {
+      syncModelWithThinking()
       if (sessions.value.length === 0)
         createSession()
       else if (!currentSessionId.value)
         currentSessionId.value = sessions.value[0].id
     }
 
+    /** 持久化恢复后，校正 DeepSeek 模型与思考开关的一致性 */
+    function syncModelWithThinking() {
+      const current = getAiProvider(providerId.value)
+      model.value = current.resolveModel(model.value, {
+        thinkingEnabled: thinkingByProvider.value[providerId.value] ?? false,
+      })
+    }
+
     return {
       sessions,
       currentSessionId,
+      providerId,
       model,
       thinkingEnabled,
       webEnabled,
@@ -166,6 +201,7 @@ export const useAiChatStore = defineStore(
       messages,
       sortedSessions,
       ensureCurrentSession,
+      setProvider,
       createSession,
       switchSession,
       deleteSession,
@@ -181,7 +217,7 @@ export const useAiChatStore = defineStore(
   },
   {
     persist: {
-      paths: ['sessions', 'currentSessionId', 'model', 'thinkingEnabled', 'webEnabled'],
+      paths: ['sessions', 'currentSessionId', 'providerId', 'model', 'thinkingByProvider', 'webEnabled'],
     },
   },
 )

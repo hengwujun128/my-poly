@@ -1,6 +1,5 @@
 import type { CreateStreamParams } from './types'
 import { SseParser } from '../sseParser'
-import { getDeepSeekChatUrl } from '../config'
 import { createUtf8Decoder } from '../utf8'
 import { formatChatCompletionsError, parseChatCompletionsError } from './error'
 
@@ -9,8 +8,7 @@ import { formatChatCompletionsError, parseChatCompletionsError } from './error'
  * 正常走 SSE；chat/completions 返回 JSON 错误时解析 error.message
  */
 export function createMpStream(params: CreateStreamParams) {
-  const { apiKey, options, callbacks, signal } = params
-  const chatUrl = getDeepSeekChatUrl()
+  const { chatUrl, apiKey, body, callbacks, signal } = params
   const parser = new SseParser()
   const decoder = createUtf8Decoder()
   let aborted = false
@@ -46,7 +44,7 @@ export function createMpStream(params: CreateStreamParams) {
       url: chatUrl,
       method: 'POST',
       header: headers,
-      data: { ...options, stream: true },
+      data: body,
       responseType: 'text',
       success: (res) => {
         if (errored || aborted)
@@ -73,7 +71,7 @@ export function createMpStream(params: CreateStreamParams) {
     url: chatUrl,
     method: 'POST',
     header: headers,
-    data: { ...options, stream: true },
+    data: body,
     enableChunked: true,
     responseType: 'arraybuffer',
     success: (res) => {

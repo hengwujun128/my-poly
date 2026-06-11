@@ -1,21 +1,43 @@
 <script lang="ts" setup>
 import type { AiSession } from '@/api/ai'
+import type { AiProvider, AiProviderId } from '@/utils/ai/providers/types'
 
 const props = defineProps<{
   modelValue: boolean
   sessions: AiSession[]
   currentSessionId: string
+  providerId?: AiProviderId
+  providerList?: AiProvider[]
+  streaming?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   'new-session': []
   'switch-session': [id: string]
+  'switch-provider': [id: AiProviderId]
   'share-session': [id: string]
   'rename-session': [id: string]
   'pin-session': [id: string]
   'delete-session': [id: string]
 }>()
+
+const currentProviderName = computed(() =>
+  props.providerList?.find(p => p.meta.id === props.providerId)?.meta.name ?? 'AI',
+)
+
+function openProviderPicker() {
+  if (props.streaming || !props.providerList?.length)
+    return
+  uni.showActionSheet({
+    itemList: props.providerList.map(p => p.meta.name),
+    success: ({ tapIndex }) => {
+      const next = props.providerList?.[tapIndex]
+      if (next && next.meta.id !== props.providerId)
+        emit('switch-provider', next.meta.id)
+    },
+  })
+}
 
 function close() {
   emit('update:modelValue', false)
@@ -64,6 +86,16 @@ function openMenu(session: AiSession) {
           </view>
           <text class="brand__name">AI 助手</text>
         </view>
+      </view>
+
+      <view
+        class="provider-btn"
+        :class="streaming ? 'provider-btn--disabled' : ''"
+        @tap="openProviderPicker"
+      >
+        <text class="provider-btn__prefix">模型</text>
+        <text class="provider-btn__label">{{ currentProviderName }}</text>
+        <wd-icon name="arrow-down" size="14px" color="#7c5cfc" />
       </view>
 
       <view class="new-btn" @tap="onNew">
@@ -143,6 +175,33 @@ function openMenu(session: AiSession) {
     font-size: 34rpx;
     font-weight: 700;
     color: #1d2129;
+  }
+}
+
+.provider-btn {
+  display: flex;
+  align-items: center;
+  height: 80rpx;
+  padding: 0 24rpx;
+  margin-bottom: 16rpx;
+  font-size: 28rpx;
+  color: #7c5cfc;
+  background: #fff;
+  border: 1rpx solid rgba(124, 92, 252, 0.25);
+  border-radius: 16rpx;
+
+  &__prefix {
+    color: #86909c;
+  }
+
+  &__label {
+    flex: 1;
+    margin: 0 12rpx;
+    font-weight: 500;
+  }
+
+  &--disabled {
+    opacity: 0.5;
   }
 }
 

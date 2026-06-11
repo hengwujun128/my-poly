@@ -25,6 +25,11 @@ const {
   displayMessages,
   thinkingEnabled,
   webEnabled,
+  supportsThinking,
+  supportsWeb,
+  thinkingLabel,
+  activeProviderId,
+  providerList,
   sessions,
   currentSessionId,
   currentSession,
@@ -76,12 +81,16 @@ const streamMessageId = computed(() => {
   return streaming.value && last?.role === 'assistant' ? last.id : ''
 })
 
-// 联网为占位能力：DeepSeek 官方接口不支持联网检索，需后端代理
 watch(webEnabled, (val) => {
   if (val) {
     uni.showToast({ title: '联网检索需后端支持，当前仅为占位', icon: 'none' })
   }
 })
+
+function onSwitchProvider(id: typeof activeProviderId.value) {
+  activeProviderId.value = id
+  uni.showToast({ title: `已切换至${providerList.find(p => p.meta.id === id)?.meta.name}`, icon: 'none' })
+}
 
 function onPick(text: string) {
   inputText.value = text
@@ -141,7 +150,11 @@ function onDeleteSession(id: string) {
       v-model="drawerVisible"
       :sessions="sessions"
       :current-session-id="currentSessionId"
+      :provider-id="activeProviderId"
+      :provider-list="providerList"
+      :streaming="streaming"
       @new-session="newSession"
+      @switch-provider="onSwitchProvider"
       @switch-session="switchSession"
       @share-session="onShareSession"
       @rename-session="onRenameSession"
@@ -169,6 +182,9 @@ function onDeleteSession(id: string) {
         v-model:web-enabled="webEnabled"
         :streaming="streaming"
         :can-send="canSend"
+        :supports-thinking="supportsThinking"
+        :supports-web="supportsWeb"
+        :thinking-label="thinkingLabel"
         @send="sendMessage()"
         @stop="stop"
       />

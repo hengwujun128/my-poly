@@ -215,6 +215,13 @@ export default defineConfig(({ command, mode }) => {
           secure: true,
           rewrite: path => path.replace(/^\/deepseek/, ''),
         },
+        // 通义千问 OpenAI 兼容接口代理（H5 开发环境）
+        '/qwen': {
+          target: 'https://dashscope.aliyuncs.com',
+          changeOrigin: true,
+          secure: true,
+          rewrite: path => path.replace(/^\/qwen/, ''),
+        },
         ...(JSON.parse(VITE_APP_PROXY_ENABLE)
           ? {
               [VITE_APP_PROXY_PREFIX]: {

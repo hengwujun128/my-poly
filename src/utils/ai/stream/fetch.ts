@@ -1,13 +1,12 @@
 import type { CreateStreamParams } from './types'
 import { SseParser } from '../sseParser'
-import { getDeepSeekChatUrl } from '../config'
 import { formatChatCompletionsError } from './error'
 
 /**
  * H5 / App 流式请求（fetch + ReadableStream）
  */
 export function createFetchStream(params: CreateStreamParams) {
-  const { apiKey, options, callbacks, signal } = params
+  const { chatUrl, apiKey, body, callbacks, signal } = params
   const parser = new SseParser()
   let aborted = false
   const controller = new AbortController()
@@ -19,14 +18,14 @@ export function createFetchStream(params: CreateStreamParams) {
 
   const run = async () => {
     try {
-      const response = await fetch(getDeepSeekChatUrl(), {
+      const response = await fetch(chatUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`,
           'Accept': 'text/event-stream',
         },
-        body: JSON.stringify({ ...options, stream: true }),
+        body: JSON.stringify(body),
         signal: controller.signal,
       })
 

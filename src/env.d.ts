@@ -37,6 +37,14 @@ interface ImportMetaEnv {
   readonly VITE_DEEPSEEK_BASE_URL?: string
   /** DeepSeek 默认模型 */
   readonly VITE_DEEPSEEK_MODEL?: string
+  /** 默认 AI Provider：deepseek | qwen */
+  readonly VITE_AI_DEFAULT_PROVIDER?: 'deepseek' | 'qwen'
+  /** 通义千问 API Key */
+  readonly VITE_QWEN_API_KEY?: string
+  /** 通义千问 OpenAI 兼容 Base URL */
+  readonly VITE_QWEN_BASE_URL?: string
+  /** 通义千问默认对话模型 */
+  readonly VITE_QWEN_MODEL?: string
   // 更多环境变量...
 }
 

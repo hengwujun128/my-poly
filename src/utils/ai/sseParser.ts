@@ -1,4 +1,4 @@
-import type { DeepSeekStreamDelta } from '@/api/ai'
+import type { StreamDelta } from '@/api/ai'
 
 /**
  * SSE 行缓冲解析器
@@ -7,12 +7,12 @@ import type { DeepSeekStreamDelta } from '@/api/ai'
 export class SseParser {
   private lineBuffer = ''
 
-  feed(chunk: string): DeepSeekStreamDelta[] {
+  feed(chunk: string): StreamDelta[] {
     this.lineBuffer += chunk
     const lines = this.lineBuffer.split('\n')
     this.lineBuffer = lines.pop() ?? ''
 
-    const deltas: DeepSeekStreamDelta[] = []
+    const deltas: StreamDelta[] = []
     for (const rawLine of lines) {
       const line = rawLine.trim()
       if (!line || line.startsWith(':'))
@@ -47,7 +47,7 @@ export class SseParser {
     return deltas
   }
 
-  flush(): DeepSeekStreamDelta[] {
+  flush(): StreamDelta[] {
     if (!this.lineBuffer.trim())
       return []
     const remaining = this.lineBuffer

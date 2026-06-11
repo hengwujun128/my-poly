@@ -7,6 +7,9 @@ const props = defineProps<{
   canSend?: boolean
   thinkingEnabled?: boolean
   webEnabled?: boolean
+  supportsThinking?: boolean
+  supportsWeb?: boolean
+  thinkingLabel?: string
 }>()
 
 const emit = defineEmits<{
@@ -153,14 +156,16 @@ function openAttachMenu() {
     <!-- 底部操作栏：深度思考 / 联网 / 附件 / 发送 -->
     <view class="action-row">
       <view
+        v-if="supportsThinking !== false"
         class="chip"
         :class="thinkingEnabled ? 'chip--active' : ''"
         @tap="toggleThinking"
       >
         <wd-icon name="bulb" size="15px" :color="thinkingEnabled ? '#7c5cfc' : '#86909c'" />
-        <text class="ml-6rpx">深度思考 (R1)</text>
+        <text class="ml-6rpx">{{ thinkingLabel || '深度思考' }}</text>
       </view>
       <view
+        v-if="supportsWeb"
         class="chip"
         :class="webEnabled ? 'chip--active' : ''"
         @tap="toggleWeb"
