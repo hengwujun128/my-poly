@@ -2,6 +2,7 @@
 import { onLoad, onShow } from '@dcloudio/uni-app'
 import { ref, watch } from 'vue'
 import { getCode, getWxCode } from '@/api/login'
+
 import {
   AGREEMENT_STORAGE_KEY,
   PRIVACY_POLICY_PAGE,
@@ -11,6 +12,8 @@ import { useTokenStore } from '@/store/token'
 import { useUserStore } from '@/store/user'
 import { normalizeCaptchaSrc, persistCaptchaSvg } from '@/utils/captcha'
 import { navigateAfterLogin } from '@/utils/navigateAfterLogin'
+
+useShare({ title: '欢迎使用 my-poly', path: '/pages/auth/login' })
 
 const agreedTerms = ref(!!uni.getStorageSync(AGREEMENT_STORAGE_KEY))
 
@@ -60,6 +63,8 @@ const loading = ref(false)
 const wxLoading = ref(false)
 const phoneLoading = ref(false)
 const redirect = ref('')
+
+useShare({ title: '欢迎使用 my-poly', path: '/pages/index/index' })
 
 async function refreshCaptcha() {
   captchaLoading.value = true
