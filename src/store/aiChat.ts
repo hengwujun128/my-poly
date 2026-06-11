@@ -29,6 +29,7 @@ export const useAiChatStore = defineStore(
     const thinkingByProvider = ref<Record<AiProviderId, boolean>>({
       deepseek: false,
       qwen: false,
+      zhipu: false,
     })
     const webEnabled = ref(false)
 

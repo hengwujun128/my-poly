@@ -1,3 +1,11 @@
+/*
+ * @Author: 张泽全 hengwujun128@gmail.com
+ * @Date: 2026-06-01 18:09:09
+ * @LastEditors: 张泽全 hengwujun128@gmail.com
+ * @LastEditTime: 2026-06-11 18:49:35
+ * @Description:
+ * @FilePath: /my-poly/src/env.d.ts
+ */
 /// <reference types="vite/client" />
 /// <reference types="vite-svg-loader" />
 
@@ -37,14 +45,20 @@ interface ImportMetaEnv {
   readonly VITE_DEEPSEEK_BASE_URL?: string
   /** DeepSeek 默认模型 */
   readonly VITE_DEEPSEEK_MODEL?: string
-  /** 默认 AI Provider：deepseek | qwen */
-  readonly VITE_AI_DEFAULT_PROVIDER?: 'deepseek' | 'qwen'
+  /** 默认 AI Provider：deepseek | qwen | zhipu */
+  readonly VITE_AI_DEFAULT_PROVIDER?: 'deepseek' | 'qwen' | 'zhipu'
   /** 通义千问 API Key */
   readonly VITE_QWEN_API_KEY?: string
   /** 通义千问 OpenAI 兼容 Base URL */
   readonly VITE_QWEN_BASE_URL?: string
   /** 通义千问默认对话模型 */
   readonly VITE_QWEN_MODEL?: string
+  /** 智谱 API Key */
+  readonly VITE_ZHIPU_API_KEY?: string
+  /** 智谱 API Base URL */
+  readonly VITE_ZHIPU_BASE_URL?: string
+  /** 智谱默认对话模型 */
+  readonly VITE_ZHIPU_MODEL?: string
   // 更多环境变量...
 }
 

@@ -1,10 +1,12 @@
 import type { AiProvider, AiProviderId } from './types'
 import { deepseekProvider } from './deepseek'
 import { qwenChatProvider } from './qwen'
+import { zhipuProvider } from './zhipu'
 
 const providers: Record<AiProviderId, AiProvider> = {
   deepseek: deepseekProvider,
   qwen: qwenChatProvider,
+  zhipu: zhipuProvider,
 }
 
 export const AI_PROVIDER_LIST = Object.values(providers)
@@ -18,5 +20,7 @@ export function getAiProvider(id: AiProviderId): AiProvider {
 
 export function getDefaultAiProviderId(): AiProviderId {
   const env = import.meta.env.VITE_AI_DEFAULT_PROVIDER?.trim()
-  return env === 'qwen' || env === 'deepseek' ? env : 'deepseek'
+  if (env === 'qwen' || env === 'deepseek' || env === 'zhipu')
+    return env
+  return 'deepseek'
 }

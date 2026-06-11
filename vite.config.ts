@@ -222,6 +222,13 @@ export default defineConfig(({ command, mode }) => {
           secure: true,
           rewrite: path => path.replace(/^\/qwen/, ''),
         },
+        // 智谱 OpenAI 兼容接口代理（H5 开发环境）
+        '/zhipu': {
+          target: 'https://open.bigmodel.cn',
+          changeOrigin: true,
+          secure: true,
+          rewrite: path => path.replace(/^\/zhipu/, ''),
+        },
         ...(JSON.parse(VITE_APP_PROXY_ENABLE)
           ? {
               [VITE_APP_PROXY_PREFIX]: {
