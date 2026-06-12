@@ -121,7 +121,7 @@ function handleCopy() {
 }
 
 .bubble {
-  padding: 20rpx 24rpx;
+  padding: 8rpx 24rpx;
   border-radius: 24rpx;
   font-size: 30rpx;
   line-height: 1.6;
