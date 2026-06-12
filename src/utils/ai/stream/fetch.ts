@@ -1,5 +1,6 @@
 import type { CreateStreamParams } from './types'
-import { SseParser } from '../sseParser'
+import { parseJsonCompletion, SseParser } from '../sseParser'
+import { dispatchDeltas } from './dispatch'
 import { formatChatCompletionsError } from './error'
 
 /**
@@ -38,6 +39,16 @@ export function createFetchStream(params: CreateStreamParams) {
         throw new Error(formatChatCompletionsError(response.status, errData))
       }
 
+      const contentType = response.headers.get('content-type') ?? ''
+      if (!contentType.includes('text/event-stream')) {
+        const delta = parseJsonCompletion(await response.text())
+        if (delta)
+          callbacks.onDelta({ content: delta.content, reasoning: delta.reasoning })
+        if (!aborted)
+          callbacks.onDone()
+        return
+      }
+
       const reader = response.body?.getReader()
       if (!reader)
         throw new Error('当前环境不支持流式读取')
@@ -49,26 +60,11 @@ export function createFetchStream(params: CreateStreamParams) {
         const { done, value } = await reader.read()
         if (done)
           break
-        const text = decoder.decode(value, { stream: true })
-        const deltas = parser.feed(text)
-        for (const delta of deltas) {
-          if (delta.done) {
-            callbacks.onDone()
-            return
-          }
-          if (delta.content || delta.reasoning) {
-            callbacks.onDelta({ content: delta.content, reasoning: delta.reasoning })
-          }
-        }
+        if (dispatchDeltas(parser.feed(decoder.decode(value, { stream: true })), callbacks))
+          return
       }
 
-      const tail = parser.flush()
-      for (const delta of tail) {
-        if (delta.content || delta.reasoning) {
-          callbacks.onDelta({ content: delta.content, reasoning: delta.reasoning })
-        }
-      }
-      if (!aborted)
+      if (!dispatchDeltas(parser.flush(), callbacks) && !aborted)
         callbacks.onDone()
     }
     catch (error) {

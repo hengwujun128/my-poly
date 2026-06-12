@@ -138,13 +138,10 @@ export const useAiChatStore = defineStore(
       const session = currentSession.value
       if (!session)
         return
-      const target = session.messages.find(m => m.id === id)
-      if (!target)
+      const index = session.messages.findIndex(m => m.id === id)
+      if (index === -1)
         return
-      if (patch.content !== undefined)
-        target.content = patch.content
-      if (patch.reasoning !== undefined)
-        target.reasoning = patch.reasoning
+      session.messages[index] = { ...session.messages[index], ...patch }
       session.updatedAt = Date.now()
     }
 

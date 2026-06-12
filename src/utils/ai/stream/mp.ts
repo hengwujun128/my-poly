@@ -1,11 +1,11 @@
 import type { CreateStreamParams } from './types'
-import { SseParser } from '../sseParser'
+import { parseJsonCompletion, SseParser } from '../sseParser'
 import { createUtf8Decoder } from '../utf8'
+import { dispatchDeltas } from './dispatch'
 import { formatChatCompletionsError, parseChatCompletionsError } from './error'
 
 /**
  * 微信小程序流式请求（enableChunked）
- * 正常走 SSE；chat/completions 返回 JSON 错误时解析 error.message
  */
 export function createMpStream(params: CreateStreamParams) {
   const { chatUrl, apiKey, body, callbacks, signal } = params
@@ -38,7 +38,6 @@ export function createMpStream(params: CreateStreamParams) {
     callbacks.onError(new Error(formatChatCompletionsError(status, responseData, chunkBuffer)))
   }
 
-  /** enableChunked 下错误体可能丢失，补读一次 chat/completions 响应 */
   const probeError = (status: number) => {
     uni.request({
       url: chatUrl,
@@ -52,9 +51,7 @@ export function createMpStream(params: CreateStreamParams) {
         errored = true
         callbacks.onError(new Error(formatChatCompletionsError(status, res.data)))
       },
-      fail: () => {
-        emitError(status)
-      },
+      fail: () => emitError(status),
     })
   }
 
@@ -86,13 +83,16 @@ export function createMpStream(params: CreateStreamParams) {
           handleError(statusCode)
           return
         }
-        const tail = parser.flush()
-        for (const delta of tail) {
-          if (delta.done)
-            continue
-          callbacks.onDelta({ content: delta.content, reasoning: delta.reasoning })
+        const jsonDelta = parseJsonCompletion(chunkBuffer)
+        if (jsonDelta) {
+          callbacks.onDelta({ content: jsonDelta.content, reasoning: jsonDelta.reasoning })
+          finish()
+          return
         }
-        finish()
+        if (dispatchDeltas(parser.flush(), callbacks))
+          finished = true
+        else
+          finish()
       }, 0)
     },
     fail: (err) => {
@@ -115,16 +115,8 @@ export function createMpStream(params: CreateStreamParams) {
       emitError(statusCode)
       return
     }
-
-    const deltas = parser.feed(text)
-    for (const delta of deltas) {
-      if (delta.done) {
-        finish()
-        return
-      }
-      if (delta.content || delta.reasoning)
-        callbacks.onDelta({ content: delta.content, reasoning: delta.reasoning })
-    }
+    if (dispatchDeltas(parser.feed(text), callbacks))
+      finished = true
   })
 
   signal?.addEventListener('abort', () => {

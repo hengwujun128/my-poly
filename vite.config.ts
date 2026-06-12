@@ -28,6 +28,7 @@ import { defineConfig, loadEnv } from 'vite'
 import ViteRestart from 'vite-plugin-restart'
 import openDevTools from './scripts/open-dev-tools'
 import vitePluginEruda from './scripts/vite-plugin-eruda'
+import { createAiProxy } from './vite-plugins/ai-proxy'
 import { createCopyNativeResourcesPlugin } from './vite-plugins/copy-native-resources'
 import syncManifestPlugin from './vite-plugins/sync-manifest-plugins'
 import syncMpWeixinProjectConfigPlugin from './vite-plugins/sync-mp-weixin-project-config'
@@ -209,26 +210,11 @@ export default defineConfig(({ command, mode }) => {
       // 仅 H5 端生效，其他端不生效（其他端走build，不走devServer)
       proxy: {
         // DeepSeek API 代理：H5 浏览器直连存在 CORS 限制，开发环境统一走代理
-        '/deepseek': {
-          target: 'https://api.deepseek.com',
-          changeOrigin: true,
-          secure: true,
-          rewrite: path => path.replace(/^\/deepseek/, ''),
-        },
+        '/deepseek': createAiProxy('https://api.deepseek.com', '/deepseek'),
         // 通义千问 OpenAI 兼容接口代理（H5 开发环境）
-        '/qwen': {
-          target: 'https://dashscope.aliyuncs.com',
-          changeOrigin: true,
-          secure: true,
-          rewrite: path => path.replace(/^\/qwen/, ''),
-        },
+        '/qwen': createAiProxy('https://dashscope.aliyuncs.com', '/qwen'),
         // 智谱 OpenAI 兼容接口代理（H5 开发环境）
-        '/zhipu': {
-          target: 'https://open.bigmodel.cn',
-          changeOrigin: true,
-          secure: true,
-          rewrite: path => path.replace(/^\/zhipu/, ''),
-        },
+        '/zhipu': createAiProxy('https://open.bigmodel.cn', '/zhipu'),
         ...(JSON.parse(VITE_APP_PROXY_ENABLE)
           ? {
               [VITE_APP_PROXY_PREFIX]: {

@@ -12,11 +12,23 @@ const props = defineProps<{
 const isUser = computed(() => props.role === 'user')
 const showThinking = computed(() => !isUser.value && !!props.reasoning)
 const thinkingExpanded = ref(true)
+const canCopy = computed(() => props.content.trim().length > 0)
 
 // 推理仍在输出（还没开始正文）时显示「深度思考中」，否则显示「已深度思考」
 const thinkingLabel = computed(() => {
   return props.streaming && !props.content ? '深度思考中…' : '已深度思考'
 })
+
+function handleCopy() {
+  if (!canCopy.value)
+    return
+  uni.setClipboardData({
+    data: props.content,
+    success: () => {
+      uni.showToast({ title: '已复制', icon: 'none' })
+    },
+  })
+}
 </script>
 
 <template>
@@ -41,7 +53,7 @@ const thinkingLabel = computed(() => {
 
       <!-- 气泡 -->
       <view class="bubble" :class="isUser ? 'bubble--user' : 'bubble--ai'">
-        <view v-if="isUser" class="user-text">
+        <view v-if="isUser || (streaming && content)" class="plain-text">
           {{ content }}
         </view>
         <ChatMarkdown v-else-if="content" :content="content" />
@@ -49,6 +61,17 @@ const thinkingLabel = computed(() => {
           <view class="typing__dot" />
           <view class="typing__dot" />
           <view class="typing__dot" />
+        </view>
+      </view>
+
+      <view
+        v-if="canCopy"
+        class="msg-actions"
+        :class="isUser ? 'msg-actions--user' : 'msg-actions--ai'"
+      >
+        <view class="copy-btn" @tap.stop="handleCopy">
+          <wd-icon name="copy" size="12px" color="#86909c" />
+          <text class="copy-btn__text">复制</text>
         </view>
       </view>
     </view>
@@ -119,8 +142,42 @@ const thinkingLabel = computed(() => {
   }
 }
 
-.user-text {
+.plain-text {
   white-space: pre-wrap;
+}
+
+.msg-actions {
+  display: flex;
+  margin-top: 8rpx;
+  padding: 0 4rpx;
+
+  &--user {
+    justify-content: flex-end;
+  }
+
+  &--ai {
+    justify-content: flex-start;
+  }
+}
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6rpx;
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(134, 144, 156, 0.08);
+  transition: background 0.2s;
+
+  &:active {
+    background: rgba(134, 144, 156, 0.16);
+  }
+
+  &__text {
+    font-size: 22rpx;
+    color: #86909c;
+    line-height: 1;
+  }
 }
 
 .thinking {

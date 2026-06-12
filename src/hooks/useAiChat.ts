@@ -116,17 +116,16 @@ export function useAiChat() {
       body,
       callbacks: {
         onDelta: ({ content: deltaContent, reasoning }) => {
-          if (deltaContent) {
+          if (deltaContent)
             streamContent.value += deltaContent
-            store.updateMessage(assistantMessageId, { content: streamContent.value })
-          }
-          if (reasoning && store.thinkingEnabled) {
+          if (reasoning && store.thinkingEnabled)
             streamReasoning.value += reasoning
-            store.updateMessage(assistantMessageId, {
-              content: streamContent.value,
-              reasoning: streamReasoning.value,
-            })
-          }
+          if (!deltaContent && !(reasoning && store.thinkingEnabled))
+            return
+          store.updateMessage(assistantMessageId, {
+            content: streamContent.value,
+            ...(store.thinkingEnabled ? { reasoning: streamReasoning.value } : {}),
+          })
         },
         onDone: () => {
           streaming.value = false

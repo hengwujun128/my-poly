@@ -2,6 +2,7 @@
 import type { AiMessage } from '@/api/ai'
 import { computed, nextTick, ref, watch } from 'vue'
 import ChatMessageBubble from './ChatMessageBubble.vue'
+import { pickRandomSuggestions } from './suggestionPool'
 
 const props = defineProps<{
   messages: AiMessage[]
@@ -23,27 +24,11 @@ const scrollIntoView = ref('')
 const autoScroll = ref(true)
 let scrollCounter = 0
 
-const SUGGESTION_POOL = [
-  '用一句话介绍你自己',
-  '帮我写一首关于春天的诗',
-  '解释什么是闭包',
-  '推荐 3 本编程书籍',
-  '生成一些常见的数学公式',
-  '风热感冒与风寒感冒区别',
-  '为什么吃甜食会让人开心？',
-  '用 JavaScript 实现快速排序',
-  '帮我制定一份周末出行计划',
-  '大模型的价值如何评估',
-]
-
-const suggestions = ref<string[]>([])
+const suggestions = ref<string[]>(pickRandomSuggestions())
 
 function pickSuggestions() {
-  const shuffled = [...SUGGESTION_POOL].sort(() => Math.random() - 0.5)
-  suggestions.value = shuffled.slice(0, 3)
+  suggestions.value = pickRandomSuggestions()
 }
-
-pickSuggestions()
 
 function scrollToBottom() {
   if (!autoScroll.value)
