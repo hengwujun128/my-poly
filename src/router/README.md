@@ -53,3 +53,7 @@ definePage({
 特殊情况例外，如业务需要跨平台复用登录注册页时，也可以用在 `小程序` 上，所以主要还是看业务需求。
 
 通过一个参数 `LOGIN_PAGE_ENABLE_IN_MP` 来控制是否在 `小程序` 中使用 `H5登录页` 的登录逻辑。
+
+## 角色权限
+
+登录后的 **角色**（`userInfo.roles`）控制 Tab / 按钮显示与页面访问兜底，详见 [docs/permission.md](../../docs/permission.md)。

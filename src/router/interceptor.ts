@@ -5,8 +5,10 @@ import { isMp } from '@uni-helper/uni-env'
  * 黑、白名单的配置，请看 config.ts 文件， EXCLUDE_LOGIN_PATH_LIST
  */
 import { useTokenStore } from '@/store/token'
+import { useUserStore } from '@/store/user'
 import { tabbarStore } from '@/tabbar/store'
 import { getAllPages, getLastPage, parseUrlToObj } from '@/utils/index'
+import { canAccessPage } from '@/utils/permission'
 import { navigateAfterLogin } from '@/utils/navigateAfterLogin'
 import { EXCLUDE_LOGIN_PATH_LIST, isNeedLoginMode, LOGIN_PAGE, LOGIN_PAGE_ENABLE_IN_MP } from './config'
 
@@ -71,6 +73,11 @@ export const navigateToInterceptor = {
     // 不管黑白名单，登录了就直接去吧（但是当前不能是登录页）
     if (tokenStore.hasLogin) {
       if (path !== LOGIN_PAGE) {
+        const userStore = useUserStore()
+        if (!canAccessPage(userStore.userInfo, path)) {
+          uni.showToast({ title: '无权限访问', icon: 'none' })
+          return false
+        }
         return true // 明确表示允许路由继续执行
       }
       else {

@@ -7,6 +7,8 @@ import type { RemoveLeadingSlashFromUnion } from '@/typings'
  */
 export type NativeTabBarItem = TabBar['list'][number] & {
   pagePath: RemoveLeadingSlashFromUnion<_LocationUrl>
+  /** 仅指定角色可见（原生 tabbar 不支持运行时过滤，需用自定义 tabbar） */
+  roles?: UserRole[]
 }
 
 /** badge 显示一个数字或 小红点（样式可以直接在 tabbar/index.vue 里面修改） */

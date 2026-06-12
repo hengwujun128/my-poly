@@ -1,4 +1,5 @@
 import type { TabBar } from '@uni-helper/vite-plugin-uni-pages'
+import { ROLE_ADMIN } from '@/constants/permission'
 import type { CustomTabBarItem, NativeTabBarItem } from './types'
 
 /**
@@ -35,6 +36,7 @@ export const nativeTabbarList: NativeTabBarItem[] = [
     selectedIconPath: 'static/tabbar/homeHL.png',
     pagePath: 'pages/ai/index',
     text: 'AI助手',
+    roles: [ROLE_ADMIN],
   },
   {
     iconPath: 'static/tabbar/personal.png',
@@ -58,6 +60,7 @@ export const customTabbarList: CustomTabBarItem[] = [
     pagePath: 'pages/ai/index',
     iconType: 'wot',
     icon: 'robot',
+    roles: [ROLE_ADMIN],
   },
   {
     pagePath: 'pages/me/me',
