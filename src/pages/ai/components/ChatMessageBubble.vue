@@ -1,13 +1,37 @@
 <script lang="ts" setup>
+import { storeToRefs } from 'pinia'
 import { computed, ref } from 'vue'
+import { useUserStore } from '@/store'
+import { resolveAvatarSrc } from '@/utils/avatar'
 import ChatMarkdown from './ChatMarkdown.vue'
 
+const DEFAULT_AVATAR = '/static/images/default-avatar.png'
+
 const props = defineProps<{
-  role: 'user' | 'assistant'
-  content: string
-  reasoning?: string
-  streaming?: boolean
+  role: 'user' | 'assistant' // 消息角色
+  content: string // 消息内容
+  reasoning?: string // 深度思考内容
+  streaming?: boolean // 是否正在流式输出
 }>()
+
+const userStore = useUserStore()
+const { userInfo } = storeToRefs(userStore)
+const avatarLoadFailed = ref(false)
+
+const userAvatarSrc = computed(() => resolveAvatarSrc(userInfo.value.avatar))
+
+const hasUserAvatar = computed(() => {
+  if (avatarLoadFailed.value)
+    return false
+  const raw = userInfo.value.avatar?.trim()
+  return !!raw && raw !== DEFAULT_AVATAR
+})
+
+function onAvatarError() {
+  avatarLoadFailed.value = true
+  if (userInfo.value.avatar !== DEFAULT_AVATAR)
+    userStore.setUserAvatar(DEFAULT_AVATAR)
+}
 
 const isUser = computed(() => props.role === 'user')
 const showThinking = computed(() => !isUser.value && !!props.reasoning)
@@ -51,9 +75,9 @@ function handleCopy() {
         </view>
       </view>
 
-      <!-- 气泡 -->
+      <!-- 气泡：用户纯文本；助手始终走 Markdown（流式时也渲染，避免先显示 ## 等原始语法） -->
       <view class="bubble" :class="isUser ? 'bubble--user' : 'bubble--ai'">
-        <view v-if="isUser || (streaming && content)" class="plain-text">
+        <view v-if="isUser" class="plain-text">
           {{ content }}
         </view>
         <ChatMarkdown v-else-if="content" :content="content" />
@@ -76,9 +100,16 @@ function handleCopy() {
       </view>
     </view>
 
-    <!-- 用户头像 -->
+    <!-- 用户头像：优先登录用户头像，无头像或加载失败时用默认图标 -->
     <view v-if="isUser" class="avatar avatar--user">
-      <wd-icon name="user" size="20px" color="#fff" />
+      <image
+        v-if="hasUserAvatar"
+        class="avatar__img"
+        :src="userAvatarSrc"
+        mode="aspectFill"
+        @error="onAvatarError"
+      />
+      <wd-icon v-else name="user" size="20px" color="#fff" />
     </view>
   </view>
 </template>
@@ -112,6 +143,13 @@ function handleCopy() {
 
   &--user {
     background: linear-gradient(135deg, #4e5969, #86909c);
+    overflow: hidden;
+  }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    border-radius: 20rpx;
   }
 }
 
