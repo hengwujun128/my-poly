@@ -1,6 +1,6 @@
 import type { ChatMessage, StreamOptions } from '@/api/ai'
 
-export type AiProviderId = 'deepseek' | 'qwen' | 'zhipu' | 'baitong'
+export type AiProviderId = 'qwen' | 'zhipu' | 'baitong' | 'baitong-deepseek'
 
 export interface AiProviderMeta {
   id: AiProviderId
@@ -29,17 +29,17 @@ export interface AiProvider {
   meta: AiProviderMeta
   defaults: AiProviderDefaults
   capabilities: AiProviderCapabilities
-  getApiKey(): string
-  assertApiKey(): string
-  getChatCompletionsUrl(): string
-  getDefaultModel(): string
+  getApiKey: () => string
+  assertApiKey: () => string
+  getChatCompletionsUrl: () => string
+  getDefaultModel: () => string
   /** 根据深度思考等开关解析实际请求模型 */
-  resolveModel(model: string, ctx: Pick<AiStreamContext, 'thinkingEnabled'>): string
+  resolveModel: (model: string, ctx: Pick<AiStreamContext, 'thinkingEnabled'>) => string
   /** 组装 chat/completions 请求体（各厂商参数差异在此隔离） */
-  buildStreamPayload(
+  buildStreamPayload: (
     options: StreamOptions,
     ctx: AiStreamContext,
-  ): Record<string, unknown>
+  ) => Record<string, unknown>
   /** 截断多轮上下文 */
-  buildChatMessages(messages: ChatMessage[]): ChatMessage[]
+  buildChatMessages: (messages: ChatMessage[]) => ChatMessage[]
 }

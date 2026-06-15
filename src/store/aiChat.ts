@@ -31,6 +31,7 @@ export const useAiChatStore = defineStore(
       qwen: false,
       zhipu: false,
       baitong: false,
+      'baitong-deepseek': false,
     })
     const webEnabled = ref(false)
 
