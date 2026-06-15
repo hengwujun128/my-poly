@@ -45,8 +45,8 @@ interface ImportMetaEnv {
   readonly VITE_DEEPSEEK_BASE_URL?: string
   /** DeepSeek 默认模型 */
   readonly VITE_DEEPSEEK_MODEL?: string
-  /** 默认 AI Provider：deepseek | qwen | zhipu */
-  readonly VITE_AI_DEFAULT_PROVIDER?: 'deepseek' | 'qwen' | 'zhipu'
+  /** 默认 AI Provider：deepseek | qwen | zhipu | baitong */
+  readonly VITE_AI_DEFAULT_PROVIDER?: 'deepseek' | 'qwen' | 'zhipu' | 'baitong'
   /** 通义千问 API Key */
   readonly VITE_QWEN_API_KEY?: string
   /** 通义千问 OpenAI 兼容 Base URL */
@@ -59,6 +59,12 @@ interface ImportMetaEnv {
   readonly VITE_ZHIPU_BASE_URL?: string
   /** 智谱默认对话模型 */
   readonly VITE_ZHIPU_MODEL?: string
+  /** 百通 AI API Key */
+  readonly VITE_BAITONG_API_KEY?: string
+  /** 百通 AI OpenAI 兼容 Base URL */
+  readonly VITE_BAITONG_BASE_URL?: string
+  /** 百通 AI 默认对话模型 */
+  readonly VITE_BAITONG_MODEL?: string
   // 更多环境变量...
 }
 

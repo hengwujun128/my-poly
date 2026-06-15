@@ -1,5 +1,5 @@
 import type { TabBar } from '@uni-helper/vite-plugin-uni-pages'
-import { ROLE_ADMIN } from '@/constants/permission'
+import { ROLE_ADMIN } from '../constants/permission'
 import type { CustomTabBarItem, NativeTabBarItem } from './types'
 
 /**

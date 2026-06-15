@@ -1,6 +1,6 @@
 import type { ChatMessage, StreamOptions } from '@/api/ai'
 
-export type AiProviderId = 'deepseek' | 'qwen' | 'zhipu'
+export type AiProviderId = 'deepseek' | 'qwen' | 'zhipu' | 'baitong'
 
 export interface AiProviderMeta {
   id: AiProviderId

@@ -1,10 +1,10 @@
 <script lang="ts" setup>
 import { onShow } from '@dcloudio/uni-app'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import ChatDrawer from '@/components/ai/ChatDrawer.vue'
-import ChatInputBar from '@/components/ai/ChatInputBar.vue'
-import ChatMessageList from '@/components/ai/ChatMessageList.vue'
-import ChatToolbar from '@/components/ai/ChatToolbar.vue'
+import ChatDrawer from './components/ChatDrawer.vue'
+import ChatInputBar from './components/ChatInputBar.vue'
+import ChatMessageList from './components/ChatMessageList.vue'
+import ChatToolbar from './components/ChatToolbar.vue'
 import { useAiChat } from '@/hooks/useAiChat'
 import { useShare } from '@/hooks/useShare'
 

@@ -215,6 +215,8 @@ export default defineConfig(({ command, mode }) => {
         '/qwen': createAiProxy('https://dashscope.aliyuncs.com', '/qwen'),
         // 智谱 OpenAI 兼容接口代理（H5 开发环境）
         '/zhipu': createAiProxy('https://open.bigmodel.cn', '/zhipu'),
+        // 百通 AI OpenAI 兼容接口代理（H5 开发环境）
+        '/baitong': createAiProxy('https://baitong-aiw.gree.com', '/baitong'),
         ...(JSON.parse(VITE_APP_PROXY_ENABLE)
           ? {
               [VITE_APP_PROXY_PREFIX]: {
