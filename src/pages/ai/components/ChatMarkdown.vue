@@ -1,33 +1,12 @@
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue'
-import MpHtml from 'mp-html/dist/uni-app/components/mp-html/mp-html.vue'
+import MpHtml from '@/components/mp-html/mp-html.vue'
+import { useChatMarkdownRender } from '@/hooks/useChatMarkdownRender'
 
 const props = defineProps<{
   content: string
 }>()
 
-// #ifdef MP-WEIXIN
-const html = ref('')
-const tagStyle = ref<Record<string, string>>({})
-let renderMarkdownToHtml: ((markdown: string) => string) | null = null
-
-watch(() => props.content, async (content) => {
-  if (!renderMarkdownToHtml) {
-    const mod = await AsyncImport('@/pages-demo/shared/markdown')
-    renderMarkdownToHtml = mod.renderMarkdownToHtml
-    tagStyle.value = mod.MP_HTML_TAG_STYLE
-  }
-  html.value = renderMarkdownToHtml!(content)
-}, { immediate: true })
-// #endif
-
-// #ifndef MP-WEIXIN
-import { MP_HTML_TAG_STYLE, renderMarkdownToHtml } from '@/pages-demo/shared/markdown'
-import 'katex/dist/katex.min.css'
-
-const html = computed(() => renderMarkdownToHtml(props.content))
-const tagStyle = MP_HTML_TAG_STYLE
-// #endif
+const { html, tagStyle } = useChatMarkdownRender(() => props.content)
 
 function onLinkTap(e: { href?: string }) {
   const href = e.href ?? ''
@@ -79,9 +58,11 @@ function onImgTap(e: { src?: string }) {
   </view>
 </template>
 
+<!-- #ifndef MP-WEIXIN -->
 <style scoped>
 .chat-markdown :deep(.katex-block) {
   overflow-x: auto;
   margin: 16rpx 0;
 }
 </style>
+<!-- #endif -->

@@ -67,5 +67,7 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss">
-
+/* #ifdef MP-WEIXIN */
+@import '@/static/styles/katex-mp.css';
+/* #endif */
 </style>

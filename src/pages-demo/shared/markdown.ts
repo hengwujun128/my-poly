@@ -1,6 +1,13 @@
 /**
- * Markdown 渲染（含代码高亮 + KaTeX）
- * 放在 pages-demo 分包内，主包 AI 页通过分包异步化动态 import，避免打入主包 vendor。
+ * AI 聊天气泡 Markdown 渲染
+ *
+ * 分包内实现，主包通过 AsyncImport 动态加载（见 vite 分包异步化配置）。
+ *
+ * 平台差异：
+ * - H5：markdown-it → KaTeX HTML（katex.renderToString）
+ * - 小程序：markdown-it 保留 $...$ / $$...$$ → mp-html latex 插件（katex-mini）排版
+ *
+ * 注意：模型可能直出 KaTeX HTML，需先还原为 LaTeX 分隔符；markdown-it 会转义 \\nabla 等，小程序路径需占位保护。
  */
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js/lib/core'
@@ -35,7 +42,14 @@ hljs.registerLanguage('go', go)
 
 let mdInstance: MarkdownIt | null = null
 
-/** mp-html 不支持 class 选择器，hljs 高亮需内联样式 */
+export type MarkdownPlatform = 'h5' | 'mp'
+
+export interface RenderMarkdownOptions {
+  platform?: MarkdownPlatform
+}
+
+// ─── 代码高亮（mp-html 仅支持内联 style，不支持 class 选择器）────────────────
+
 const HLJS_INLINE: Record<string, string> = {
   'hljs-keyword': 'color:#ff7b72',
   'hljs-string': 'color:#a5d6ff',
@@ -61,6 +75,14 @@ const CODE_BLOCK_HEADER = 'display:flex;justify-content:space-between;align-item
 const CODE_COPY = 'color:#7c5cfc;text-decoration:none;'
 const CODE_INNER = 'display:block;padding:16rpx 24rpx;font-family:Menlo,Consolas,monospace;font-size:24rpx;color:#c9d1d9;white-space:pre-wrap;word-break:break-all;line-height:1.6;'
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
 function applyInlineHljsStyles(html: string): string {
   return html.replace(/<span class="([^"]*)">/g, (_, classNames: string) => {
     const style = classNames.split(/\s+/)
@@ -77,15 +99,156 @@ function renderCodeBlock(str: string, language: string, highlighted: string): st
   return `<pre style="${CODE_BLOCK_PRE}"><div style="${CODE_BLOCK_HEADER}"><span>${language}</span><a style="${CODE_COPY}" href="copy:${encoded}">复制</a></div><code style="${CODE_INNER}">${body}</code></pre>`
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+// ─── 模型 KaTeX HTML → LaTeX 分隔符（双端共用）────────────────────────────
+
+const KATEX_BLOCK_MARKERS = [
+  '<span class="katex-inline">',
+  '<span class="katex-display">',
+  '<div class="katex-block">',
+  '<span class="katex">',
+] as const
+
+const ANNOTATION_TEX_RE = /<annotation[^>]*encoding=["']application\/x-tex["'][^>]*>([\s\S]*?)<\/annotation>/gi
+
+function decodeTexEntities(tex: string): string {
+  return tex
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
 }
 
-function renderKatexBlock(content: string, displayMode: boolean): string {
+function findSpanBlockEnd(src: string, start: number): number {
+  let i = start
+  let depth = 0
+  while (i < src.length) {
+    if (src.startsWith('<span', i)) {
+      depth++
+      const close = src.indexOf('>', i)
+      if (close === -1)
+        return -1
+      i = close + 1
+      continue
+    }
+    if (src.startsWith('</span>', i)) {
+      depth--
+      i += 7
+      if (depth === 0)
+        return i
+      continue
+    }
+    i++
+  }
+  return -1
+}
+
+function findKatexBlockEnd(src: string, start: number): number {
+  if (src.startsWith('<div', start)) {
+    const close = src.indexOf('</div>', start)
+    return close === -1 ? -1 : close + '</div>'.length
+  }
+  return findSpanBlockEnd(src, start)
+}
+
+/** 取包含 annotation 的最外层 KaTeX 块起点（兼容双层 <span class="katex"> 包裹） */
+function findKatexBlockStart(src: string, annIndex: number): number {
+  let best = -1
+  for (const marker of KATEX_BLOCK_MARKERS) {
+    let from = 0
+    while (from < annIndex) {
+      const idx = src.indexOf(marker, from)
+      if (idx === -1 || idx >= annIndex)
+        break
+      const end = findKatexBlockEnd(src, idx)
+      if (end > annIndex && (best === -1 || idx < best))
+        best = idx
+      from = idx + marker.length
+    }
+  }
+  return best
+}
+
+function toLatexDelimiters(tex: string, displayMode: boolean): string {
+  const body = tex.trim()
+  return displayMode ? `\n$$${body}$$\n` : `$${body}$`
+}
+
+function stripResidualKatexHtml(src: string): string {
+  return src
+    .replace(/<span class="katex-mathml">[\s\S]*?<\/span>/gi, '')
+    .replace(/<math[\s\S]*?<\/math>/gi, '')
+    .replace(/<annotation[\s\S]*?<\/annotation>/gi, '')
+    .replace(/<span class="katex-html"[^>]*>[\s\S]*?<\/span>/gi, '')
+    .replace(/<svg[\s\S]*?<\/svg>/gi, '')
+    .replace(/<span class="katex(?:-display|-inline)?">[\s\S]*?<\/span>(?:\s*<\/span>)*/gi, '')
+    .replace(/<div class="katex-block">[\s\S]*?<\/div>/gi, '')
+}
+
+/** 从 <annotation encoding="application/x-tex"> 提取 LaTeX，替换整块 KaTeX HTML */
+function normalizeModelKatexToLatex(src: string): string {
+  if (!/katex|application\/x-tex|<math[\s>]/i.test(src))
+    return src
+
+  let result = src
+  let match = ANNOTATION_TEX_RE.exec(result)
+
+  while (match) {
+    const tex = decodeTexEntities(String(match[1]).trim())
+    const annAt = match.index!
+    const start = findKatexBlockStart(result, annAt)
+
+    if (start === -1 || !tex) {
+      match = ANNOTATION_TEX_RE.exec(result)
+      continue
+    }
+
+    const end = findKatexBlockEnd(result, start)
+    if (end <= start) {
+      match = ANNOTATION_TEX_RE.exec(result)
+      continue
+    }
+
+    const displayMode = /katex-display|katex-block/i.test(result.slice(start, end))
+    const latex = toLatexDelimiters(tex, displayMode)
+    result = result.slice(0, start) + latex + result.slice(end)
+    ANNOTATION_TEX_RE.lastIndex = start + latex.length
+    match = ANNOTATION_TEX_RE.exec(result)
+  }
+
+  return stripResidualKatexHtml(result)
+}
+
+// ─── 小程序：保护 LaTeX 分隔符，避免 markdown-it 转义反斜杠 ─────────────────
+
+const LATEX_PLACEHOLDER_OPEN = '\uE000latex:'
+const LATEX_PLACEHOLDER_CLOSE = '\uE001'
+const LATEX_PLACEHOLDER_RE = /\uE000latex:(\d+)\uE001/g
+
+function stashLatex(blocks: string[], block: string): string {
+  const id = blocks.length
+  blocks.push(block)
+  return `${LATEX_PLACEHOLDER_OPEN}${id}${LATEX_PLACEHOLDER_CLOSE}`
+}
+
+function protectLatexDelimiters(src: string): { text: string, blocks: string[] } {
+  const blocks: string[] = []
+  let text = src
+
+  text = text.replace(/\$\$([\s\S]+?)\$\$/g, match => stashLatex(blocks, match))
+  text = text.replace(/\\\[([\s\S]+?)\\\]/g, (_, tex) => stashLatex(blocks, `$$${String(tex).trim()}$$`))
+  text = text.replace(/\$([^$\n]+)\$/g, match => stashLatex(blocks, match))
+  text = text.replace(/\\\(([\s\S]+?)\\\)/g, (_, tex) => stashLatex(blocks, `$${String(tex).trim()}$`))
+
+  return { text, blocks }
+}
+
+function restoreLatexDelimiters(html: string, blocks: string[]): string {
+  return html.replace(LATEX_PLACEHOLDER_RE, (_, id) => blocks[Number(id)] ?? '')
+}
+
+// ─── H5：LaTeX 分隔符预渲染为 KaTeX HTML ───────────────────────────────────
+
+function renderKatexHtml(content: string, displayMode: boolean): string {
   try {
     return katex.renderToString(content, {
       displayMode,
@@ -98,22 +261,23 @@ function renderKatexBlock(content: string, displayMode: boolean): string {
   }
 }
 
-/** 预处理 LaTeX：$$...$$ / \[...\] 块级，$...$ / \(...\) 行内 */
-function preprocessMath(src: string): string {
+function preprocessMathForH5(src: string): string {
   let result = src.replace(/\$\$([\s\S]+?)\$\$/g, (_, tex) => {
-    return `\n<div class="katex-block">${renderKatexBlock(String(tex).trim(), true)}</div>\n`
+    return `\n<div class="katex-block">${renderKatexHtml(String(tex).trim(), true)}</div>\n`
   })
   result = result.replace(/\\\[([\s\S]+?)\\\]/g, (_, tex) => {
-    return `\n<div class="katex-block">${renderKatexBlock(String(tex).trim(), true)}</div>\n`
+    return `\n<div class="katex-block">${renderKatexHtml(String(tex).trim(), true)}</div>\n`
   })
   result = result.replace(/\\\(([\s\S]+?)\\\)/g, (_, tex) => {
-    return `<span class="katex-inline">${renderKatexBlock(String(tex).trim(), false)}</span>`
+    return `<span class="katex-inline">${renderKatexHtml(String(tex).trim(), false)}</span>`
   })
   result = result.replace(/\$([^$\n]+)\$/g, (_, tex) => {
-    return `<span class="katex-inline">${renderKatexBlock(String(tex).trim(), false)}</span>`
+    return `<span class="katex-inline">${renderKatexHtml(String(tex).trim(), false)}</span>`
   })
   return result
 }
+
+// ─── markdown-it ───────────────────────────────────────────────────────────
 
 function getMarkdownIt(): MarkdownIt {
   if (mdInstance)
@@ -140,15 +304,22 @@ function getMarkdownIt(): MarkdownIt {
   return mdInstance
 }
 
-/** Markdown → HTML（供 mp-html 渲染） */
-export function renderMarkdownToHtml(markdown: string): string {
+/** Markdown → HTML，供 ChatMarkdown / mp-html 使用 */
+export function renderMarkdownToHtml(markdown: string, options: RenderMarkdownOptions = {}): string {
   if (!markdown.trim())
     return ''
-  const withMath = preprocessMath(markdown)
-  return getMarkdownIt().render(withMath)
+
+  const platform = options.platform ?? 'h5'
+  const src = normalizeModelKatexToLatex(markdown)
+
+  if (platform === 'h5')
+    return getMarkdownIt().render(preprocessMathForH5(src))
+
+  const { text, blocks } = protectLatexDelimiters(src)
+  return restoreLatexDelimiters(getMarkdownIt().render(text), blocks)
 }
 
-/** mp-html tag-style 配置（小程序不支持复杂选择器，需内联样式） */
+/** mp-html tag-style（小程序 rich-text 仅支持标签级内联样式） */
 export const MP_HTML_TAG_STYLE = {
   p: 'margin:0 0 16rpx;line-height:1.7;color:#1d2129;font-size:28rpx;',
   pre: CODE_BLOCK_PRE,
