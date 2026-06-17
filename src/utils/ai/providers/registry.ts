@@ -9,7 +9,7 @@
 import type { AiProvider, AiProviderId } from './types'
 import { baitongDeepseekProvider } from './baitong-deepseek'
 import { baitongProvider } from './baitong'
-// import { deepseekProvider } from './deepseek'
+// import { deepseekProvider } from './deepseek' // 官方 DeepSeek 暂不启用，恢复时取消注释并同步 types
 import { qwenChatProvider } from './qwen'
 import { zhipuProvider } from './zhipu'
 
@@ -23,8 +23,20 @@ const providers: Record<AiProviderId, AiProvider> = {
 
 export const AI_PROVIDER_LIST = Object.values(providers)
 
-export function getAiProvider(id: AiProviderId): AiProvider {
-  const provider = providers[id]
+export function isValidAiProviderId(id: string): id is AiProviderId {
+  return id in providers
+}
+
+/** 无效或已下线 ID 回退 env 默认 Provider（如旧版持久化的 deepseek） */
+export function normalizeAiProviderId(id: string): AiProviderId {
+  if (isValidAiProviderId(id))
+    return id
+  return getDefaultAiProviderId()
+}
+
+export function getAiProvider(id: AiProviderId | string): AiProvider {
+  const normalized = normalizeAiProviderId(id)
+  const provider = providers[normalized]
   if (!provider)
     throw new Error(`未知的 AI Provider: ${id}`)
   return provider
